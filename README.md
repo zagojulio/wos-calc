@@ -15,6 +15,12 @@ A web-based tool for optimizing resource investments and training strategies in 
 
 ### 💰 Pack Purchases
 - Track purchases with date, pack name, cost, and speed-ups included
+- Automatic purchase history from CSV file
+- Manual purchase entry with CSV persistence
+- Combined purchase statistics and analysis
+- Daily spending visualization
+- Date range filtering
+- Export combined purchase history
 - Summarized spending and inventory insights
 
 ## 📦 Setup
@@ -53,12 +59,21 @@ A web-based tool for optimizing resource investments and training strategies in 
    - Points per Minute
    - Required Speed-ups for Target
 
+6. Pack Purchases Features:
+   - View automatic purchases from CSV
+   - Add manual purchases with CSV persistence
+   - Filter purchases by date range
+   - View combined spending statistics
+   - Export combined purchase history
+   - Track speed-ups included in purchases
+
 ## 📊 Visualizations
 
 - Speed-up Utilization Chart
 - Points Progression Overview
 - Scenario Comparison Chart
-- Pack Purchase Table
+- Daily Spending Bar Chart
+- Pack Purchase Tables
 
 ## 🧱 Architecture
 
@@ -71,10 +86,11 @@ A web-based tool for optimizing resource investments and training strategies in 
 - Uses Plotly for interactive charts
 - Session-based state for dynamic data flow
 - Dark-themed UI with custom CSS
+- CSV-based data persistence
 
 ## 🛠️ Development
 
-- Git workflow with `main`, `dev`, and feature branches
+- Git workflow with main, dev, and feature branches. Project recently restructured to move all files from wos-calc/ to root directory for better modular access and simplicity.
 - Commit convention: `[TYPE]: description` (e.g., `FEAT: Add pack purchase tracker`)
 - `.cursorrules` defines coding and branching standards
 

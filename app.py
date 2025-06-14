@@ -5,13 +5,20 @@ Main Streamlit application for calculating and optimizing investment returns.
 
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
+import plotly.express as px
 from calculations import (
     calculate_effective_training_time,
     calculate_batches_and_points,
     calculate_efficiency_metrics,
     calculate_speedups_needed
+)
+from features.purchase_manager import (
+    load_purchases,
+    save_purchase,
+    calculate_purchase_stats,
+    export_combined_purchases
 )
 
 # Page configuration
@@ -120,26 +127,12 @@ st.markdown("""
     Input your parameters in the sidebar to analyze your training efficiency.
 """)
 
-# Initialize session state for pack purchases if not exists
-if 'pack_purchases' not in st.session_state:
-    st.session_state.pack_purchases = []
+# Initialize session state for purchases if not exists
+if 'auto_purchases' not in st.session_state:
+    st.session_state.auto_purchases = None
 
-# Initialize session state for CSV data if not exists
-if 'csv_purchases' not in st.session_state:
-    st.session_state.csv_purchases = None
-
-def load_csv_purchases():
-    """Load purchases from CSV file."""
-    try:
-        csv_path = os.path.join('data', 'purchase_history.csv')
-        if os.path.exists(csv_path):
-            df = pd.read_csv(csv_path, parse_dates=['Date'])
-            st.session_state.csv_purchases = df
-            return True
-        return False
-    except Exception as e:
-        st.error(f"Error loading CSV file: {str(e)}")
-        return False
+if 'manual_purchases' not in st.session_state:
+    st.session_state.manual_purchases = None
 
 # Create tabs
 tab1, tab2 = st.tabs(["Training Analysis", "Pack Purchases"])
@@ -154,7 +147,7 @@ with tab1:
         general_speedups = st.number_input(
             "General Speed-ups",
             min_value=0.0,
-            value=5000.0,
+            value=18000.0,
             step=100.0,
             help="General purpose speed-up minutes available"
         )
@@ -162,7 +155,7 @@ with tab1:
         training_speedups = st.number_input(
             "Troop Training Speed-ups",
             min_value=0.0,
-            value=5000.0,
+            value=1515.0,
             step=100.0,
             help="Speed-up minutes specifically for troop training"
         )
@@ -174,7 +167,7 @@ with tab1:
         col1, col2 = st.columns(2)
         with col1:
             days = st.number_input("Days", min_value=0, value=0, step=1)
-            minutes = st.number_input("Minutes", min_value=0, max_value=59, value=57, step=1)
+            minutes = st.number_input("Minutes", min_value=0, max_value=59, value=50, step=1)
         with col2:
             hours = st.number_input("Hours", min_value=0, max_value=23, value=4, step=1)
             seconds = st.number_input("Seconds", min_value=0, max_value=59, value=0, step=1)
@@ -302,48 +295,118 @@ with tab1:
 with tab2:
     st.header("Pack Purchase History")
     
-    # Load CSV data on tab entry or refresh
-    if st.session_state.csv_purchases is None:
-        load_csv_purchases()
+    # Load purchase data on tab entry or refresh
+    if st.session_state.auto_purchases is None:
+        try:
+            st.session_state.auto_purchases = load_purchases('data/purchase_history.csv')
+        except Exception as e:
+            st.error(f"Error loading automatic purchases: {str(e)}")
     
-    # CSV Data Section
-    st.subheader("CSV Purchase History")
+    if st.session_state.manual_purchases is None:
+        try:
+            st.session_state.manual_purchases = load_purchases('data/manual_purchases.csv')
+        except Exception as e:
+            st.error(f"Error loading manual purchases: {str(e)}")
+    
+    # Date range filter
     col1, col2 = st.columns([3, 1])
+    with col1:
+        date_range = st.date_input(
+            "Date Range",
+            value=(
+                datetime.now() - timedelta(days=30),
+                datetime.now()
+            ),
+            help="Filter purchases by date range"
+        )
     
     with col2:
-        if st.button("🔄 Reload CSV"):
-            if load_csv_purchases():
-                st.success("CSV data reloaded successfully!")
+        if st.button("🔄 Reload Data"):
+            try:
+                st.session_state.auto_purchases = load_purchases('data/purchase_history.csv')
+                st.session_state.manual_purchases = load_purchases('data/manual_purchases.csv')
+                st.success("Data reloaded successfully!")
+            except Exception as e:
+                st.error(f"Error reloading data: {str(e)}")
     
-    if st.session_state.csv_purchases is not None:
-        df_csv = st.session_state.csv_purchases
-        
-        # Calculate CSV summary metrics
-        total_spent_csv = df_csv["Value (R$)"].sum()
-        total_purchases_csv = len(df_csv)
+    # Calculate combined statistics
+    stats = calculate_purchase_stats(
+        st.session_state.auto_purchases,
+        st.session_state.manual_purchases
+    )
+    
+    # Combined Summary Section
+    st.subheader("Combined Purchase Summary")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        total_spent = stats["total_spent_auto"] + stats["total_spent_manual"]
+        st.metric("Total Spent", f"R${total_spent:,.2f}")
+    
+    with col2:
+        st.metric("Average Daily Spending", f"R${stats['avg_spending_per_day']:,.2f}")
+    
+    with col3:
+        st.metric("Total Speed-ups", f"{stats['total_speedups']:,} min")
+    
+    # Spending by day chart
+    if not stats["spending_by_day"].empty:
+        fig = px.bar(
+            stats["spending_by_day"],
+            x='Date',
+            y='Amount',
+            title='Daily Spending',
+            labels={'Amount': 'Amount (R$)', 'Date': 'Date'},
+            template='plotly_dark'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Export button
+    if st.button("📥 Export Combined History"):
+        try:
+            export_path = 'data/combined_purchases.csv'
+            if export_combined_purchases(
+                st.session_state.auto_purchases,
+                st.session_state.manual_purchases,
+                export_path
+            ):
+                st.success(f"Combined history exported to {export_path}")
+            else:
+                st.warning("No purchases to export")
+        except Exception as e:
+            st.error(f"Error exporting combined history: {str(e)}")
+    
+    st.markdown("---")
+    
+    # Automatic Purchases Section
+    st.subheader("Automatic Purchase History")
+    if st.session_state.auto_purchases is not None and not st.session_state.auto_purchases.empty:
+        df_auto = st.session_state.auto_purchases.copy()
+        df_auto['Date'] = pd.to_datetime(df_auto['Date'])
+        df_auto = df_auto[
+            (df_auto['Date'].dt.date >= date_range[0]) &
+            (df_auto['Date'].dt.date <= date_range[1])
+        ]
         
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("Total Spent (CSV)", f"R${total_spent_csv:,.2f}")
+            st.metric("Total Spent (Auto)", f"R${stats['total_spent_auto']:,.2f}")
         with col2:
-            st.metric("Total Purchases (CSV)", f"{total_purchases_csv:,}")
+            st.metric("Total Purchases (Auto)", f"{len(df_auto):,}")
         
-        # Display CSV data
         st.dataframe(
-            df_csv,
+            df_auto,
             use_container_width=True,
             hide_index=True
         )
     else:
-        st.info("No CSV purchase history available. Please ensure 'data/purchase_history.csv' exists.")
+        st.info("No automatic purchase history available.")
     
     st.markdown("---")
     
     # Manual Purchase Form Section
     st.subheader("Manual Purchase Entry")
     with st.form("pack_purchase_form"):
-        st.subheader("Add New Purchase")
-        
         col1, col2 = st.columns(2)
         with col1:
             purchase_date = st.date_input(
@@ -358,7 +421,7 @@ with tab2:
         
         with col2:
             total_spending = st.number_input(
-                "Total Spending ($)",
+                "Total Spending (R$)",
                 min_value=0.0,
                 step=0.01,
                 help="How much did you spend on this pack?"
@@ -374,33 +437,48 @@ with tab2:
         
         if submitted:
             if pack_name and total_spending > 0:
-                new_purchase = {
-                    "Date": purchase_date,
-                    "Pack Name": pack_name,
-                    "Spending ($)": total_spending,
-                    "Speed-ups (min)": speedups_included
-                }
-                st.session_state.pack_purchases.append(new_purchase)
-                st.success("Purchase added successfully!")
+                try:
+                    new_purchase = {
+                        "Date": purchase_date,
+                        "Pack Name": pack_name,
+                        "Spending ($)": total_spending,
+                        "Speed-ups (min)": speedups_included
+                    }
+                    
+                    # Save to CSV
+                    if save_purchase('data/manual_purchases.csv', new_purchase):
+                        # Update session state
+                        if st.session_state.manual_purchases is None:
+                            st.session_state.manual_purchases = pd.DataFrame([new_purchase])
+                        else:
+                            st.session_state.manual_purchases = pd.concat([
+                                st.session_state.manual_purchases,
+                                pd.DataFrame([new_purchase])
+                            ])
+                        st.success("Purchase added successfully!")
+                    else:
+                        st.error("Failed to save purchase")
+                except Exception as e:
+                    st.error(f"Error saving purchase: {str(e)}")
             else:
                 st.error("Please fill in all required fields.")
     
     # Display manual purchase history
-    if st.session_state.pack_purchases:
-        st.subheader("Manual Purchase History")
-        df_manual = pd.DataFrame(st.session_state.pack_purchases)
-        
-        # Calculate manual summary metrics
-        total_spent_manual = df_manual["Spending ($)"].sum()
-        total_speedups_manual = df_manual["Speed-ups (min)"].sum()
+    st.subheader("Manual Purchase History")
+    if st.session_state.manual_purchases is not None and not st.session_state.manual_purchases.empty:
+        df_manual = st.session_state.manual_purchases.copy()
+        df_manual['Date'] = pd.to_datetime(df_manual['Date'])
+        df_manual = df_manual[
+            (df_manual['Date'].dt.date >= date_range[0]) &
+            (df_manual['Date'].dt.date <= date_range[1])
+        ]
         
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("Total Spent (Manual)", f"${total_spent_manual:,.2f}")
+            st.metric("Total Spent (Manual)", f"R${stats['total_spent_manual']:,.2f}")
         with col2:
-            st.metric("Total Speed-ups (Manual)", f"{total_speedups_manual:,} min")
+            st.metric("Total Speed-ups (Manual)", f"{stats['total_speedups']:,} min")
         
-        # Display manual purchases table
         st.dataframe(
             df_manual,
             use_container_width=True,
@@ -409,7 +487,12 @@ with tab2:
         
         # Add clear button
         if st.button("Clear Manual Purchase History"):
-            st.session_state.pack_purchases = []
-            st.experimental_rerun()
+            try:
+                if os.path.exists('data/manual_purchases.csv'):
+                    os.remove('data/manual_purchases.csv')
+                st.session_state.manual_purchases = None
+                st.experimental_rerun()
+            except Exception as e:
+                st.error(f"Error clearing manual purchases: {str(e)}")
     else:
         st.info("No manual purchase history available. Add your first purchase using the form above.") 
