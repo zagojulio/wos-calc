@@ -1,0 +1,112 @@
+# Rule Type: Always
+
+## Branch Structure
+- main: Production-ready code only
+- dev: Development integration branch
+- feature/*: Feature branches (e.g., feature/speedup-validation)
+
+## Commit Message Format
+[TYPE]: Description
+
+Types:
+- FEAT: New features
+- FIX: Bug fixes
+- DOCS: Documentation changes
+- STYLE: Code style changes
+- REFACTOR: Code refactoring
+- TEST: Test additions/modifications
+- CHORE: Build process or auxiliary tool changes
+
+## Pull Request Requirements
+1. Title: [TYPE] Brief description
+2. Description:
+   - Changes made
+   - Issues addressed
+   - Testing performed
+   - Screenshots (if UI changes)
+
+## Code Review Checklist
+- [ ] Code follows PEP 8
+- [ ] Functions have docstrings
+- [ ] No hardcoded values
+- [ ] Error handling implemented
+- [ ] Tests added/updated
+- [ ] Documentation updated
+
+## Version Control
+- Tag format: vX.Y.Z
+- Semantic versioning:
+  - X: Major version
+  - Y: Minor version
+  - Z: Patch version
+
+## Testing Requirements
+- Unit tests for all calculations
+- Integration tests for Streamlit components
+- Test coverage > 80%
+
+## Documentation
+- README.md must include:
+  - Setup instructions
+  - Dependencies
+  - Usage examples
+  - API documentation
+
+## File Organization
+- app.py: Main Streamlit application
+- calculations.py: Core calculation logic
+- visualizations.py: Chart generation
+- tests/: Test files
+- docs/: Documentation
+
+## Git Ignore Rules
+- __pycache__/
+- *.pyc
+- .env
+- .venv/
+- .pytest_cache/
+- .coverage
+- htmlcov/
+- .DS_Store
+
+## Development Workflow
+1. Create feature branch from dev
+2. Implement changes
+3. Add tests
+4. Update documentation
+5. Create PR to dev
+6. Code review
+7. Merge to dev
+8. Test in dev
+9. Merge to main for release
+
+## Code Style
+- Python: PEP 8
+- Line length: 88 characters
+- Docstrings: Google style
+- Type hints: Required for all functions
+
+## Security
+- No sensitive data in code
+- No API keys in source
+- Use environment variables
+
+## Performance
+- Optimize calculations
+- Minimize Streamlit reruns
+- Cache expensive operations
+
+## Error Handling
+- Graceful error messages
+- Input validation
+- Logging for debugging
+
+## Accessibility
+- High contrast UI
+- Clear labels
+- Keyboard navigation
+
+## Maintenance
+- Regular dependency updates
+- Code cleanup
+- Performance monitoring 
