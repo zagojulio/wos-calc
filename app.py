@@ -6,6 +6,7 @@ Main Streamlit application for calculating and optimizing investment returns.
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import os
 from calculations import (
     calculate_effective_training_time,
     calculate_batches_and_points,
@@ -122,6 +123,23 @@ st.markdown("""
 # Initialize session state for pack purchases if not exists
 if 'pack_purchases' not in st.session_state:
     st.session_state.pack_purchases = []
+
+# Initialize session state for CSV data if not exists
+if 'csv_purchases' not in st.session_state:
+    st.session_state.csv_purchases = None
+
+def load_csv_purchases():
+    """Load purchases from CSV file."""
+    try:
+        csv_path = os.path.join('data', 'purchase_history.csv')
+        if os.path.exists(csv_path):
+            df = pd.read_csv(csv_path, parse_dates=['Date'])
+            st.session_state.csv_purchases = df
+            return True
+        return False
+    except Exception as e:
+        st.error(f"Error loading CSV file: {str(e)}")
+        return False
 
 # Create tabs
 tab1, tab2 = st.tabs(["Training Analysis", "Pack Purchases"])
@@ -284,7 +302,45 @@ with tab1:
 with tab2:
     st.header("Pack Purchase History")
     
-    # Pack purchase form
+    # Load CSV data on tab entry or refresh
+    if st.session_state.csv_purchases is None:
+        load_csv_purchases()
+    
+    # CSV Data Section
+    st.subheader("CSV Purchase History")
+    col1, col2 = st.columns([3, 1])
+    
+    with col2:
+        if st.button("🔄 Reload CSV"):
+            if load_csv_purchases():
+                st.success("CSV data reloaded successfully!")
+    
+    if st.session_state.csv_purchases is not None:
+        df_csv = st.session_state.csv_purchases
+        
+        # Calculate CSV summary metrics
+        total_spent_csv = df_csv["Value (R$)"].sum()
+        total_purchases_csv = len(df_csv)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Total Spent (CSV)", f"R${total_spent_csv:,.2f}")
+        with col2:
+            st.metric("Total Purchases (CSV)", f"{total_purchases_csv:,}")
+        
+        # Display CSV data
+        st.dataframe(
+            df_csv,
+            use_container_width=True,
+            hide_index=True
+        )
+    else:
+        st.info("No CSV purchase history available. Please ensure 'data/purchase_history.csv' exists.")
+    
+    st.markdown("---")
+    
+    # Manual Purchase Form Section
+    st.subheader("Manual Purchase Entry")
     with st.form("pack_purchase_form"):
         st.subheader("Add New Purchase")
         
@@ -329,31 +385,31 @@ with tab2:
             else:
                 st.error("Please fill in all required fields.")
     
-    # Display purchase history
+    # Display manual purchase history
     if st.session_state.pack_purchases:
-        st.subheader("Purchase History")
-        df = pd.DataFrame(st.session_state.pack_purchases)
+        st.subheader("Manual Purchase History")
+        df_manual = pd.DataFrame(st.session_state.pack_purchases)
         
-        # Calculate summary metrics
-        total_spent = df["Spending ($)"].sum()
-        total_speedups = df["Speed-ups (min)"].sum()
+        # Calculate manual summary metrics
+        total_spent_manual = df_manual["Spending ($)"].sum()
+        total_speedups_manual = df_manual["Speed-ups (min)"].sum()
         
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("Total Spent", f"${total_spent:,.2f}")
+            st.metric("Total Spent (Manual)", f"${total_spent_manual:,.2f}")
         with col2:
-            st.metric("Total Speed-ups", f"{total_speedups:,} min")
+            st.metric("Total Speed-ups (Manual)", f"{total_speedups_manual:,} min")
         
-        # Display the table
+        # Display manual purchases table
         st.dataframe(
-            df,
+            df_manual,
             use_container_width=True,
             hide_index=True
         )
         
         # Add clear button
-        if st.button("Clear Purchase History"):
+        if st.button("Clear Manual Purchase History"):
             st.session_state.pack_purchases = []
             st.experimental_rerun()
     else:
-        st.info("No purchase history available. Add your first purchase using the form above.") 
+        st.info("No manual purchase history available. Add your first purchase using the form above.") 
