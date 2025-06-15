@@ -20,45 +20,55 @@ def calculate_effective_training_time(
     Returns:
         float: Effective training time in minutes
     """
-    return base_time * (1 - time_reduction_bonus)
+    if base_time < 0:
+        raise ValueError("Base training time cannot be negative.")
+    if not (0 <= time_reduction_bonus <= 1):
+        raise ValueError("Time reduction bonus must be between 0 and 1.")
+    return max(0, base_time * (1 - time_reduction_bonus))
 
 def calculate_batches_and_points(
-    speedup_minutes: float,
+    total_speedups: float,
     effective_training_time: float,
     points_per_batch: float,
-    _: float  # Removed points_bonus parameter
+    current_points: float
 ) -> Tuple[int, float]:
     """
     Calculate the number of batches that can be trained and total points earned.
     
     Args:
-        speedup_minutes (float): Total speed-up minutes available
+        total_speedups (float): Total speed-up minutes available
         effective_training_time (float): Training time per batch after bonuses
         points_per_batch (float): Points earned per batch
-        _ (float): Unused parameter (kept for backward compatibility)
+        current_points (float): Current points earned
     
     Returns:
         Tuple[int, float]: Number of batches and total points earned
     """
-    num_batches = int(speedup_minutes / effective_training_time)
-    total_points = num_batches * points_per_batch
+    if total_speedups < 0 or effective_training_time <= 0 or points_per_batch < 0 or current_points < 0:
+        raise ValueError("Inputs must be non-negative and effective_training_time > 0.")
+    num_batches = int(total_speedups // effective_training_time)
+    total_points = (num_batches * points_per_batch) + current_points
     return num_batches, total_points
 
 def calculate_efficiency_metrics(
-    speedup_minutes: float,
+    total_speedups: float,
     total_points: float
 ) -> Dict[str, float]:
     """
     Calculate efficiency metrics for the investment.
     
     Args:
-        speedup_minutes (float): Total speed-up minutes used
+        total_speedups (float): Total speed-up minutes used
         total_points (float): Total points earned
     
     Returns:
         Dict[str, float]: Dictionary containing efficiency metrics
     """
-    points_per_minute = total_points / speedup_minutes if speedup_minutes > 0 else 0
+    if total_speedups < 0:
+        raise ValueError("Total speedups cannot be negative.")
+    if total_speedups == 0:
+        return {"points_per_minute": 0}
+    points_per_minute = total_points / total_speedups
     return {
         "points_per_minute": points_per_minute,
         "efficiency_score": points_per_minute * 100  # Normalized score
@@ -67,7 +77,7 @@ def calculate_efficiency_metrics(
 def calculate_speedups_needed(
     target_points: float,
     points_per_batch: float,
-    _: float,  # Removed points_bonus parameter
+    current_points: float,
     effective_training_time: float
 ) -> float:
     """
@@ -76,11 +86,17 @@ def calculate_speedups_needed(
     Args:
         target_points (float): Desired total points
         points_per_batch (float): Points earned per batch
-        _ (float): Unused parameter (kept for backward compatibility)
+        current_points (float): Current points earned
         effective_training_time (float): Training time per batch after bonuses
     
     Returns:
         float: Required speed-up minutes
     """
-    batches_needed = target_points / points_per_batch
-    return batches_needed * effective_training_time 
+    if any(x < 0 for x in [target_points, points_per_batch, current_points, effective_training_time]):
+        raise ValueError("Inputs must be non-negative.")
+    if points_per_batch == 0 or effective_training_time <= 0:
+        raise ZeroDivisionError("points_per_batch and effective_training_time must be > 0.")
+    if current_points >= target_points:
+        return 0
+    batches_needed = (target_points - current_points) / points_per_batch
+    return max(0, batches_needed * effective_training_time) 
