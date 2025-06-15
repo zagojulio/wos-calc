@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Tuple
 def load_purchases(csv_path: str) -> Optional[pd.DataFrame]:
     """
     Load purchases from CSV file.
+    Raises an exception if the file does not exist.
     
     Args:
         csv_path (str): Path to CSV file
@@ -17,11 +18,11 @@ def load_purchases(csv_path: str) -> Optional[pd.DataFrame]:
     Returns:
         Optional[pd.DataFrame]: Loaded data or None if error
     """
+    if not os.path.exists(csv_path):
+        raise FileNotFoundError(f"CSV file {csv_path} does not exist.")
     try:
-        if os.path.exists(csv_path):
-            df = pd.read_csv(csv_path, parse_dates=['Date'])
-            return df
-        return None
+        df = pd.read_csv(csv_path, parse_dates=['Date'])
+        return df
     except Exception as e:
         raise Exception(f"Error loading CSV file {csv_path}: {str(e)}")
 
@@ -109,7 +110,7 @@ def export_combined_purchases(
     output_path: str
 ) -> bool:
     """
-    Export combined purchase history to CSV.
+    Export combined purchase history to CSV, handling missing columns gracefully.
     
     Args:
         auto_purchases (Optional[pd.DataFrame]): Automatic purchases
@@ -124,15 +125,36 @@ def export_combined_purchases(
         
         if auto_purchases is not None and not auto_purchases.empty:
             auto_df = auto_purchases.copy()
+            # Standardize columns
+            if 'Pack Name' not in auto_df.columns:
+                if 'Purchase Name' in auto_df.columns:
+                    auto_df['Pack Name'] = auto_df['Purchase Name']
+                else:
+                    auto_df['Pack Name'] = ''
+            if 'Value (R$)' in auto_df.columns:
+                auto_df['Amount'] = auto_df['Value (R$)']
+            elif 'Spending ($)' in auto_df.columns:
+                auto_df['Amount'] = auto_df['Spending ($)']
+            else:
+                auto_df['Amount'] = 0.0
+            if 'Speed-ups (min)' not in auto_df.columns:
+                auto_df['Speed-ups (min)'] = 0
             auto_df['Source'] = 'Automatic'
-            auto_df['Amount'] = auto_df['Value (R$)']
-            dfs.append(auto_df[['Date', 'Pack Name', 'Amount', 'Source']])
+            dfs.append(auto_df[['Date', 'Pack Name', 'Amount', 'Speed-ups (min)', 'Source']])
         
         if manual_purchases is not None and not manual_purchases.empty:
             manual_df = manual_purchases.copy()
+            if 'Amount' not in manual_df.columns:
+                if 'Spending ($)' in manual_df.columns:
+                    manual_df['Amount'] = manual_df['Spending ($)']
+                else:
+                    manual_df['Amount'] = 0.0
+            if 'Speed-ups (min)' not in manual_df.columns:
+                manual_df['Speed-ups (min)'] = 0
             manual_df['Source'] = 'Manual'
-            manual_df['Amount'] = manual_df['Spending ($)']
-            dfs.append(manual_df[['Date', 'Pack Name', 'Amount', 'Source']])
+            if 'Pack Name' not in manual_df.columns:
+                manual_df['Pack Name'] = ''
+            dfs.append(manual_df[['Date', 'Pack Name', 'Amount', 'Speed-ups (min)', 'Source']])
         
         if dfs:
             combined_df = pd.concat(dfs).sort_values('Date')
