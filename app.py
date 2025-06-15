@@ -134,151 +134,167 @@ if 'auto_purchases' not in st.session_state:
 if 'manual_purchases' not in st.session_state:
     st.session_state.manual_purchases = None
 
-# Create tabs
+
+# Main tabs navigation using st.tabs
 tab1, tab2 = st.tabs(["Training Analysis", "Pack Purchases"])
 
+# Keep training_params in session state
+if 'training_params' not in st.session_state:
+    st.session_state.training_params = {
+        'general_speedups': 18000.0,
+        'training_speedups': 1515.0,
+        'days': 0,
+        'hours': 4,
+        'minutes': 50,
+        'seconds': 0,
+        'troops_per_batch': 426,
+        'time_reduction_bonus': 20.0,
+        'points_per_troop': 830.0,
+        'target_points': 10000.0
+    }
+
 with tab1:
-    # Sidebar for input parameters
-    with st.sidebar:
-        st.header("Training Parameters")
-        
-        # Speed-up inputs
+    # Sidebar training parameters
+    with st.sidebar.expander("Training Parameters", expanded=True):
         st.subheader("Speed-up Minutes")
         general_speedups = st.number_input(
             "General Speed-ups",
             min_value=0.0,
-            value=18000.0,
+            value=st.session_state.training_params.get('general_speedups', 18000.0),
             step=100.0,
-            help="General purpose speed-up minutes available"
+            help="General purpose speed-up minutes available",
+            key="general_speedups"
         )
-        
         training_speedups = st.number_input(
             "Troop Training Speed-ups",
             min_value=0.0,
-            value=1515.0,
+            value=st.session_state.training_params.get('training_speedups', 1515.0),
             step=100.0,
-            help="Speed-up minutes specifically for troop training"
+            help="Speed-up minutes specifically for troop training",
+            key="training_speedups"
         )
-        
         total_speedups = general_speedups + training_speedups
-        
-        # Training parameters
+
         st.subheader("Base Training Time")
         col1, col2 = st.columns(2)
         with col1:
-            days = st.number_input("Days", min_value=0, value=0, step=1)
-            minutes = st.number_input("Minutes", min_value=0, max_value=59, value=50, step=1)
+            days = st.number_input(
+                "Days",
+                min_value=0,
+                value=st.session_state.training_params.get('days', 0),
+                step=1,
+                key="days"
+            )
+            minutes = st.number_input(
+                "Minutes",
+                min_value=0,
+                max_value=59,
+                value=st.session_state.training_params.get('minutes', 50),
+                step=1,
+                key="minutes"
+            )
         with col2:
-            hours = st.number_input("Hours", min_value=0, max_value=23, value=4, step=1)
-            seconds = st.number_input("Seconds", min_value=0, max_value=59, value=0, step=1)
-        
+            hours = st.number_input(
+                "Hours",
+                min_value=0,
+                max_value=23,
+                value=st.session_state.training_params.get('hours', 4),
+                step=1,
+                key="hours"
+            )
+            seconds = st.number_input(
+                "Seconds",
+                min_value=0,
+                max_value=59,
+                value=st.session_state.training_params.get('seconds', 0),
+                step=1,
+                key="seconds"
+            )
         base_training_time = (days * 24 * 60) + (hours * 60) + minutes + (seconds / 60)
-        
-        # Troops and points
+
         st.subheader("Training Configuration")
         troops_per_batch = st.number_input(
             "Troops per Batch",
             min_value=1,
-            value=426,
+            value=st.session_state.training_params.get('troops_per_batch', 426),
             step=1,
-            help="Number of troops trained in each batch"
+            help="Number of troops trained in each batch",
+            key="troops_per_batch"
         )
-        
         time_reduction_bonus = st.number_input(
             "Training Time Reduction (%)",
             min_value=0.0,
             max_value=100.0,
-            value=20.0,
+            value=st.session_state.training_params.get('time_reduction_bonus', 20.0),
             step=1.0,
-            help="Your training time reduction bonus"
+            help="Your training time reduction bonus",
+            key="time_reduction_bonus"
         ) / 100
-        
         points_per_troop = st.number_input(
             "Points per Troop",
             min_value=1.0,
-            value=830.0,
+            value=st.session_state.training_params.get('points_per_troop', 830.0),
             step=1.0,
-            help="Base points earned per troop"
+            help="Base points earned per troop",
+            key="points_per_troop"
         )
-        
-        # Target points
+
         st.subheader("Goals")
         target_points = st.number_input(
             "Target Points",
             min_value=0.0,
-            value=10000.0,
+            value=st.session_state.training_params.get('target_points', 10000.0),
             step=1000.0,
-            help="Your target points goal"
+            help="Your target points goal",
+            key="target_points"
         )
 
-    # Main content area
+        # Update session state
+        st.session_state.training_params = {
+            'general_speedups': general_speedups,
+            'training_speedups': training_speedups,
+            'days': days,
+            'hours': hours,
+            'minutes': minutes,
+            'seconds': seconds,
+            'troops_per_batch': troops_per_batch,
+            'time_reduction_bonus': time_reduction_bonus * 100,
+            'points_per_troop': points_per_troop,
+            'target_points': target_points
+        }
+
+    # Main Training Analysis content
     st.header("Training Analysis")
 
-    # Calculate metrics
     effective_time = calculate_effective_training_time(
         base_training_time,
         time_reduction_bonus
     )
-
     num_batches, total_points = calculate_batches_and_points(
         total_speedups,
         effective_time,
         points_per_troop * troops_per_batch,
         0
     )
-
     efficiency = calculate_efficiency_metrics(total_speedups, total_points)
 
-    # Display results in a grid
     col1, col2, col3, col4 = st.columns(4)
-
     with col1:
-        st.metric(
-            "Effective Training Time",
-            f"{effective_time:.1f} min",
-            help="Training time after reduction bonus"
-        )
-
+        st.metric("Effective Training Time", f"{effective_time:.1f} min", help="Training time after reduction bonus")
     with col2:
-        st.metric(
-            "Number of Batches",
-            f"{num_batches:,}",
-            help="Total batches that can be trained"
-        )
-
+        st.metric("Number of Batches", f"{num_batches:,}", help="Total batches that can be trained")
     with col3:
-        st.metric(
-            "Total Points",
-            f"{total_points:,.0f}",
-            help="Total points earned from all batches"
-        )
-
+        st.metric("Total Points", f"{total_points:,.0f}", help="Total points earned from all batches")
     with col4:
-        st.metric(
-            "Points per Minute",
-            f"{efficiency['points_per_minute']:.2f}",
-            help="Efficiency metric"
-        )
+        st.metric("Points per Minute", f"{efficiency['points_per_minute']:.2f}", help="Efficiency metric")
 
-    # Speed-up usage breakdown
     st.subheader("Speed-up Usage")
     col1, col2 = st.columns(2)
-
     with col1:
-        st.metric(
-            "General Speed-ups Used",
-            f"{min(general_speedups, total_speedups):,.0f} min",
-            help="General speed-ups that will be used"
-        )
-
+        st.metric("General Speed-ups Used", f"{min(general_speedups, total_speedups):,.0f} min", help="General speed-ups that will be used")
     with col2:
-        st.metric(
-            "Training Speed-ups Used",
-            f"{min(training_speedups, total_speedups):,.0f} min",
-            help="Training-specific speed-ups that will be used"
-        )
+        st.metric("Training Speed-ups Used", f"{min(training_speedups, total_speedups):,.0f} min", help="Training-specific speed-ups that will be used")
 
-    # Target points calculation
     if target_points > 0:
         speedups_needed = calculate_speedups_needed(
             target_points,
@@ -286,29 +302,27 @@ with tab1:
             0,
             effective_time
         )
-        st.metric(
-            "Speed-ups Needed for Target",
-            f"{speedups_needed:,.0f} min",
-            help="Required speed-up minutes to reach target"
-        )
+        st.metric("Speed-ups Needed for Target", f"{speedups_needed:,.0f} min", help="Required speed-up minutes to reach target")
 
 with tab2:
+    # Clear sidebar content on Pack Purchases tab
+    st.sidebar.empty()
+
+    # Pack Purchases tab content remains unchanged
     st.header("Pack Purchase History")
     
-    # Load purchase data on tab entry or refresh
     if st.session_state.auto_purchases is None:
         try:
             st.session_state.auto_purchases = load_purchases('data/purchase_history.csv')
         except Exception as e:
             st.error(f"Error loading automatic purchases: {str(e)}")
-    
+
     if st.session_state.manual_purchases is None:
         try:
             st.session_state.manual_purchases = load_purchases('data/manual_purchases.csv')
         except Exception as e:
             st.error(f"Error loading manual purchases: {str(e)}")
-    
-    # Date range filter
+
     col1, col2 = st.columns([3, 1])
     with col1:
         date_range = st.date_input(
@@ -319,7 +333,6 @@ with tab2:
             ),
             help="Filter purchases by date range"
         )
-    
     with col2:
         if st.button("🔄 Reload Data"):
             try:
@@ -328,28 +341,22 @@ with tab2:
                 st.success("Data reloaded successfully!")
             except Exception as e:
                 st.error(f"Error reloading data: {str(e)}")
-    
-    # Calculate combined statistics
+
     stats = calculate_purchase_stats(
         st.session_state.auto_purchases,
         st.session_state.manual_purchases
     )
-    
-    # Combined Summary Section
+
     st.subheader("Combined Purchase Summary")
     col1, col2, col3 = st.columns(3)
-    
     with col1:
         total_spent = stats["total_spent_auto"] + stats["total_spent_manual"]
         st.metric("Total Spent", f"R${total_spent:,.2f}")
-    
     with col2:
         st.metric("Average Daily Spending", f"R${stats['avg_spending_per_day']:,.2f}")
-    
     with col3:
         st.metric("Total Speed-ups", f"{stats['total_speedups']:,} min")
-    
-    # Spending by day chart
+
     if not stats["spending_by_day"].empty:
         fig = px.bar(
             stats["spending_by_day"],
@@ -360,8 +367,7 @@ with tab2:
             template='plotly_dark'
         )
         st.plotly_chart(fig, use_container_width=True)
-    
-    # Export button
+
     if st.button("📥 Export Combined History"):
         try:
             export_path = 'data/combined_purchases.csv'
@@ -375,10 +381,9 @@ with tab2:
                 st.warning("No purchases to export")
         except Exception as e:
             st.error(f"Error exporting combined history: {str(e)}")
-    
+
     st.markdown("---")
-    
-    # Automatic Purchases Section
+
     st.subheader("Automatic Purchase History")
     if st.session_state.auto_purchases is not None and not st.session_state.auto_purchases.empty:
         df_auto = st.session_state.auto_purchases.copy()
@@ -387,13 +392,13 @@ with tab2:
             (df_auto['Date'].dt.date >= date_range[0]) &
             (df_auto['Date'].dt.date <= date_range[1])
         ]
-        
+
         col1, col2 = st.columns(2)
         with col1:
             st.metric("Total Spent (Auto)", f"R${stats['total_spent_auto']:,.2f}")
         with col2:
             st.metric("Total Purchases (Auto)", f"{len(df_auto):,}")
-        
+
         st.dataframe(
             df_auto,
             use_container_width=True,
@@ -401,10 +406,9 @@ with tab2:
         )
     else:
         st.info("No automatic purchase history available.")
-    
+
     st.markdown("---")
-    
-    # Manual Purchase Form Section
+
     st.subheader("Manual Purchase Entry")
     with st.form("pack_purchase_form"):
         col1, col2 = st.columns(2)
@@ -418,7 +422,7 @@ with tab2:
                 "Pack Name",
                 help="Name or description of the pack"
             )
-        
+
         with col2:
             total_spending = st.number_input(
                 "Total Spending (R$)",
@@ -432,9 +436,9 @@ with tab2:
                 step=1,
                 help="How many speed-up minutes were included?"
             )
-        
+
         submitted = st.form_submit_button("Add Purchase")
-        
+
         if submitted:
             if pack_name and total_spending > 0:
                 try:
@@ -444,10 +448,8 @@ with tab2:
                         "Spending ($)": total_spending,
                         "Speed-ups (min)": speedups_included
                     }
-                    
-                    # Save to CSV
+
                     if save_purchase('data/manual_purchases.csv', new_purchase):
-                        # Update session state
                         if st.session_state.manual_purchases is None:
                             st.session_state.manual_purchases = pd.DataFrame([new_purchase])
                         else:
@@ -462,8 +464,7 @@ with tab2:
                     st.error(f"Error saving purchase: {str(e)}")
             else:
                 st.error("Please fill in all required fields.")
-    
-    # Display manual purchase history
+
     st.subheader("Manual Purchase History")
     if st.session_state.manual_purchases is not None and not st.session_state.manual_purchases.empty:
         df_manual = st.session_state.manual_purchases.copy()
@@ -472,20 +473,19 @@ with tab2:
             (df_manual['Date'].dt.date >= date_range[0]) &
             (df_manual['Date'].dt.date <= date_range[1])
         ]
-        
+
         col1, col2 = st.columns(2)
         with col1:
             st.metric("Total Spent (Manual)", f"R${stats['total_spent_manual']:,.2f}")
         with col2:
             st.metric("Total Speed-ups (Manual)", f"{stats['total_speedups']:,} min")
-        
+
         st.dataframe(
             df_manual,
             use_container_width=True,
             hide_index=True
         )
-        
-        # Add clear button
+
         if st.button("Clear Manual Purchase History"):
             try:
                 if os.path.exists('data/manual_purchases.csv'):
@@ -495,4 +495,4 @@ with tab2:
             except Exception as e:
                 st.error(f"Error clearing manual purchases: {str(e)}")
     else:
-        st.info("No manual purchase history available. Add your first purchase using the form above.") 
+        st.info("No manual purchase history available. Add your first purchase using the form above.")
