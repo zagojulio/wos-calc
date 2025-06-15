@@ -74,11 +74,7 @@ Types:
 2. Implement changes
 3. Add tests
 4. Update documentation
-5. Create PR to dev
-6. Code review
-7. Merge to dev
-8. Test in dev
-9. Merge to main for release
+5. Update COMMIT.md and PR.md files
 
 ## Code Style
 - Python: PEP 8

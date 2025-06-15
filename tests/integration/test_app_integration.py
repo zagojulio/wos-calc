@@ -45,12 +45,12 @@ class TestPurchaseWorkflow:
     def test_load_purchase_data(self, sample_purchase_data):
         """Test loading purchase data into session state."""
         # Load automatic purchases
-        auto_purchases = load_purchases(sample_purchase_data['auto_path'])
+        auto_purchases, _ = load_purchases(sample_purchase_data['auto_path'])
         assert isinstance(auto_purchases, pd.DataFrame)
         assert len(auto_purchases) == len(sample_purchase_data['auto_data'])
         
         # Load manual purchases
-        manual_purchases = load_purchases(sample_purchase_data['manual_path'])
+        _, manual_purchases = load_purchases(manual_path=sample_purchase_data['manual_path'])
         assert isinstance(manual_purchases, pd.DataFrame)
         assert len(manual_purchases) == len(sample_purchase_data['manual_data'])
 
@@ -67,14 +67,14 @@ class TestPurchaseWorkflow:
         assert save_purchase(sample_purchase_data['manual_path'], new_purchase)
         
         # Verify purchase was added
-        updated_purchases = load_purchases(sample_purchase_data['manual_path'])
+        _, updated_purchases = load_purchases(manual_path=sample_purchase_data['manual_path'])
         assert len(updated_purchases) == len(sample_purchase_data['manual_data']) + 1
         assert updated_purchases['Pack Name'].iloc[-1] == new_purchase['Pack Name']
 
     def test_delete_manual_purchase(self, sample_purchase_data):
         """Test deleting a manual purchase."""
         # Load initial data
-        initial_purchases = load_purchases(sample_purchase_data['manual_path'])
+        _, initial_purchases = load_purchases(manual_path=sample_purchase_data['manual_path'])
         initial_count = len(initial_purchases)
         
         # Delete first purchase
@@ -88,14 +88,14 @@ class TestPurchaseWorkflow:
         updated_purchases.to_csv(sample_purchase_data['manual_path'], index=False)
         
         # Verify purchase was deleted
-        final_purchases = load_purchases(sample_purchase_data['manual_path'])
+        _, final_purchases = load_purchases(manual_path=sample_purchase_data['manual_path'])
         assert len(final_purchases) == initial_count - 1
 
     def test_filter_purchases_by_date(self, sample_purchase_data):
         """Test filtering purchases by date range."""
         # Load purchases
-        auto_purchases = load_purchases(sample_purchase_data['auto_path'])
-        manual_purchases = load_purchases(sample_purchase_data['manual_path'])
+        auto_purchases, _ = load_purchases(sample_purchase_data['auto_path'])
+        _, manual_purchases = load_purchases(manual_path=sample_purchase_data['manual_path'])
         
         # Set date range
         start_date = datetime(2025, 6, 1)
@@ -119,8 +119,8 @@ class TestPurchaseWorkflow:
     def test_calculate_stats_after_changes(self, sample_purchase_data):
         """Test calculating stats after data changes."""
         # Load initial data
-        auto_purchases = load_purchases(sample_purchase_data['auto_path'])
-        manual_purchases = load_purchases(sample_purchase_data['manual_path'])
+        auto_purchases, _ = load_purchases(sample_purchase_data['auto_path'])
+        _, manual_purchases = load_purchases(manual_path=sample_purchase_data['manual_path'])
         
         # Calculate initial stats
         initial_stats = calculate_purchase_stats(auto_purchases, manual_purchases)
@@ -135,7 +135,7 @@ class TestPurchaseWorkflow:
         save_purchase(sample_purchase_data['manual_path'], new_purchase)
         
         # Load updated data and calculate new stats
-        updated_manual = load_purchases(sample_purchase_data['manual_path'])
+        _, updated_manual = load_purchases(manual_path=sample_purchase_data['manual_path'])
         updated_stats = calculate_purchase_stats(auto_purchases, updated_manual)
         
         # Verify stats were updated

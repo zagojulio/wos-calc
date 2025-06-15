@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="1.982" timestamp="2025-06-15T18:10:35.720595" hostname="Julios-MacBook-Pro.local"><testcase classname="" name="tests.unit.training_manager.test_training_visualizer" time="0.000"><error message="collection failure">ImportError while importing test module '/Users/jaz/Library/Mobile Documents/com~apple~CloudDocs/Estudos/05. Projects/02. Whiteout Survival/tests/unit/training_manager/test_training_visualizer.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Users/jaz/opt/anaconda3/lib/python3.8/site-packages/_pytest/python.py:538: in importtestmodule
+    mod = import_path(path, mode=importmode, root=config.rootpath)
+/Users/jaz/opt/anaconda3/lib/python3.8/site-packages/_pytest/pathlib.py:539: in import_path
+    spec.loader.exec_module(mod)  # type: ignore[union-attr]
+/Users/jaz/opt/anaconda3/lib/python3.8/site-packages/_pytest/assertion/rewrite.py:178: in exec_module
+    exec(co, module.__dict__)
+tests/unit/training_manager/test_training_visualizer.py:8: in &lt;module&gt;
+    from features.training_visualizer import (
+E   ModuleNotFoundError: No module named 'features.training_visualizer'</error></testcase></testsuite></testsuites>
