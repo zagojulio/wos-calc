@@ -25,18 +25,18 @@ A web-based tool for optimizing resource investments and training strategies in 
 
 ## 📦 Setup
 
-1. Install Python 3.8 or higher
+1. Install Python 3.8 or higher  
 2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+```
 
 ## 🚀 Usage
 
 1. Launch the app:
-   ```bash
-   streamlit run app.py
-   ```
+```bash
+streamlit run app.py
+```
 
 2. Access the web interface at `http://localhost:8501`
 
@@ -87,10 +87,11 @@ A web-based tool for optimizing resource investments and training strategies in 
 - Session-based state for dynamic data flow
 - Dark-themed UI with custom CSS
 - CSV-based data persistence
+- Type hints and docstrings throughout
 
 ## 🛠️ Development
 
-- Git workflow with main, dev, and feature branches. Project recently restructured to move all files from wos-calc/ to root directory for better modular access and simplicity.
+- Git workflow with main, dev, and feature branches. Project recently restructured to move all files from `wos-calc/` to root directory for better modular access and simplicity.
 - Commit convention: `[TYPE]: description` (e.g., `FEAT: Add pack purchase tracker`)
 - `.cursorrules` defines coding and branching standards
 
