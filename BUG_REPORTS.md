@@ -117,3 +117,45 @@
 
 - **Fix Suggestion:**  
   Pre-format the display strings for the selectbox outside the widget call, ensuring `.strftime()` is called on scalar datetime objects. Map the selected option back to the DataFrame index for deletion.
+
+## Bug #4 - TypeError: calculate_batches_and_points() missing required positional arguments
+
+- **Date:** 2025-06-15  
+- **Status:** Done  
+- **Reported by:** User  
+- **Description:**  
+  The function `calculate_batches_and_points` is called with insufficient arguments in the `render_training_analysis` function of `training_manager.py`. Specifically, the required positional arguments `'points_per_batch'` and `'current_points'` are missing.
+
+- **Traceback:**  
+  ```
+  Traceback (most recent call last):
+    File "/Users/jaz/opt/anaconda3/lib/python3.8/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 542, in _run_script
+      exec(code, module.__dict__)
+    File "/Users/jaz/Library/Mobile Documents/com~apple~CloudDocs/Estudos/05. Projects/02. Whiteout Survival/app.py", line 37, in main
+      render_training_analysis(params)
+    File "/Users/jaz/Library/Mobile Documents/com~apple~CloudDocs/Estudos/05. Projects/02. Whiteout Survival/features/training_manager.py", line 144, in render_training_analysis
+      batches, total_points = calculate_batches_and_points(
+  TypeError: calculate_batches_and_points() missing 2 required positional arguments: 'points_per_batch' and 'current_points'
+  ```
+
+- **Environment:**  
+  Python 3.8, Streamlit, Custom modules
+
+- **Steps to Reproduce:**  
+  1. Launch the app and navigate to the Training Analysis tab.  
+  2. The app crashes due to a TypeError from a function call missing required arguments.
+
+- **Expected Behavior:**  
+  The function `calculate_batches_and_points` should be called with all required parameters, allowing the Training Analysis tab to render successfully.
+
+- **Actual Behavior:**  
+  App throws a TypeError and fails to render the Training Analysis tab.
+
+- **Workaround:**  
+  None known.
+
+- **Fix:**  
+  Fixed on 2025-06-15 by updating the function call in `render_training_analysis` to include all required arguments:
+  - Added calculation of `points_per_batch` from `troops_per_batch * points_per_troop`
+  - Added `current_points` parameter with initial value of 0.0
+  - Function now receives all required arguments in the correct order

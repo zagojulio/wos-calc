@@ -134,31 +134,55 @@ def render_training_sidebar():
 
 def render_training_analysis(params):
     """Render training analysis results."""
-    # Calculate effective training time
+    # Validate input parameters
+    if params['general_speedups'] < 0:
+        raise ValueError("General speedups cannot be negative")
+    if params['training_speedups'] < 0:
+        raise ValueError("Training speedups cannot be negative")
+    if params['base_training_time'] < 0:
+        raise ValueError("Base training time cannot be negative")
+    if params['troops_per_batch'] < 0:
+        raise ValueError("Troops per batch cannot be negative")
+    if params['points_per_troop'] < 0:
+        raise ValueError("Points per troop cannot be negative")
+    if params['target_points'] < 0:
+        raise ValueError("Target points cannot be negative")
+    if not (0 <= params['time_reduction_bonus'] <= 1):
+        raise ValueError("Time reduction bonus must be between 0 and 1")
+
+    # Calculate initial values
     effective_time = calculate_effective_training_time(
         params['base_training_time'],
         params['time_reduction_bonus']
     )
+    points_per_batch = params['troops_per_batch'] * params['points_per_troop']
+    total_speedups = params['general_speedups'] + params['training_speedups']
+    current_points = 0.0
 
     # Calculate batches and points
     batches, total_points = calculate_batches_and_points(
-        params['troops_per_batch'],
-        params['points_per_troop']
+        total_speedups,
+        effective_time,
+        points_per_batch,
+        current_points
     )
 
     # Calculate efficiency metrics
     efficiency = calculate_efficiency_metrics(
-        effective_time,
-        total_points,
-        params['target_points']
+        total_speedups,
+        total_points
     )
 
     # Calculate speedups needed
-    speedups = calculate_speedups_needed(
-        effective_time,
-        params['general_speedups'],
-        params['training_speedups']
+    speedups_needed = calculate_speedups_needed(
+        params['target_points'],
+        points_per_batch,
+        current_points,
+        effective_time
     )
+
+    # Calculate remaining speedups
+    remaining_speedups = total_speedups - (batches * effective_time)
 
     # Display results
     st.subheader("Training Analysis Results")
@@ -166,14 +190,14 @@ def render_training_analysis(params):
     col1, col2 = st.columns(2)
     with col1:
         st.metric("Effective Training Time", f"{effective_time:.1f} minutes")
-        st.metric("Total Points per Batch", f"{total_points:,.0f}")
-        st.metric("Batches to Target", f"{efficiency['batches_to_target']:,.1f}")
+        st.metric("Total Points per Batch", f"{points_per_batch:,.0f}")
+        st.metric("Batches to Target", f"{batches:,.1f}")
     
     with col2:
-        st.metric("Time to Target", f"{efficiency['time_to_target']:,.1f} minutes")
-        st.metric("Speed-ups Needed", f"{speedups['needed']:,.0f}")
-        st.metric("Speed-ups Remaining", f"{speedups['remaining']:,.0f}")
+        st.metric("Time to Target", f"{batches * effective_time:,.1f} minutes")
+        st.metric("Speed-ups Needed", f"{speedups_needed:,.0f}")
+        st.metric("Speed-ups Remaining", f"{remaining_speedups:,.0f}")
 
     # Display warning if speedups are insufficient
-    if speedups['needed'] > 0:
-        st.warning(f"You need {speedups['needed']:,.0f} more speed-up minutes to reach your target.") 
+    if speedups_needed > 0:
+        st.warning(f"You need {speedups_needed:,.0f} more speed-up minutes to reach your target.") 

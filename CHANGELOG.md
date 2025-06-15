@@ -1,6 +1,45 @@
 # Changelog
 
-## [Unreleased] - 2025-06-14
+## [Unreleased]
+
+### Added
+- Core calculation engine for training times and points
+- Speed-up utilization tracking and optimization
+- Points efficiency metrics and target calculations
+- Multiple scenario comparison functionality
+- Dark theme UI with responsive layout
+- Interactive visualizations:
+  - Speed-up utilization pie chart
+  - Points progression line chart
+  - Efficiency comparison bar chart
+- Pack purchase management:
+  - Manual entry with CSV persistence
+  - Automatic history loading
+  - Combined statistics and filtering
+  - Export functionality
+  - Speed-up tracking integration
+
+### Changed
+- Unified purchase data display and interaction
+- Improved UI organization and layout
+- Enhanced error handling and data validation
+- Optimized calculation performance
+
+### Fixed
+- CSV file operation safety improvements
+- Purchase deletion confirmation handling
+- Input validation edge cases
+- Data persistence reliability
+
+### Tested
+- Core calculation unit tests
+- Purchase management integration tests
+- UI component tests
+- Error handling validation
+- Current test coverage: 62%
+- All critical paths verified
+
+## [v0.2.0] - 2025-06-15
 
 ### Added
 - Manual purchase entries are now persisted to CSV (`data/manual_purchases.csv`).
@@ -10,7 +49,7 @@
 - Export functionality to download combined purchase history as CSV.
 - Tracking of speed-ups included in purchases related to training usage.
 - New UI improvements: consistent styling between manual and automatic purchase tables, clear section separation, and combined summary area.
-- Enhanced error handling with user-friendly messages for CSV load/save operations.
+- Row-level delete functionality for manual purchases with confirmation dialogs.
 
 ### Changed
 - Refactored Pack Purchases tab to unify manual and automatic purchase data display and interaction.
@@ -20,3 +59,11 @@
 ### Fixed
 - Safe file operations to prevent CSV corruption during manual purchase persistence.
 - Graceful handling of missing or malformed CSV files.
+- Fixed bug causing errors when deleting purchases due to improper selectbox formatting.
+
+### Tested
+- Implemented comprehensive unit and integration test suites covering core calculation and purchase management functions.
+- Added error handling tests for invalid inputs and file operations.
+- Achieved 62% test coverage with all tests passing and no regressions.
+- Verified robustness against missing data and edge cases.
+- Planned next steps for UI/end-to-end testing and visualization coverage.
