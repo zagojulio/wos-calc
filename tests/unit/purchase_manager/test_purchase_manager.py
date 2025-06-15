@@ -43,15 +43,15 @@ class TestLoadPurchases:
         csv_path = temp_csv_dir / "test_purchases.csv"
         sample_auto_purchases.to_csv(csv_path, index=False)
         
-        loaded_df = load_purchases(str(csv_path))
-        assert isinstance(loaded_df, pd.DataFrame)
-        assert len(loaded_df) == len(sample_auto_purchases)
-        assert all(col in loaded_df.columns for col in sample_auto_purchases.columns)
+        auto_df, _ = load_purchases(str(csv_path))
+        assert isinstance(auto_df, pd.DataFrame)
+        assert len(auto_df) == len(sample_auto_purchases)
+        assert all(col in auto_df.columns for col in sample_auto_purchases.columns)
 
     def test_load_nonexistent_file(self):
         """Test loading a nonexistent file."""
         with pytest.raises(Exception):
-            load_purchases("nonexistent.csv")
+            load_purchases("nonexistent_auto.csv", "nonexistent_manual.csv")
 
     def test_load_invalid_csv(self, temp_csv_dir):
         """Test loading an invalid CSV file."""
@@ -60,7 +60,7 @@ class TestLoadPurchases:
             f.write("invalid,csv,data\n")
         
         with pytest.raises(Exception):
-            load_purchases(str(csv_path))
+            load_purchases(str(csv_path), str(csv_path))
 
 class TestSavePurchase:
     def test_save_new_purchase(self, temp_csv_dir):

@@ -24,6 +24,8 @@ def calculate_effective_training_time(
         raise ValueError("Base training time cannot be negative.")
     if not (0 <= time_reduction_bonus <= 1):
         raise ValueError("Time reduction bonus must be between 0 and 1.")
+    if base_time == float('inf') or time_reduction_bonus == float('inf'):
+        raise ValueError("Infinite values are not allowed.")
     return max(0, base_time * (1 - time_reduction_bonus))
 
 def calculate_batches_and_points(
@@ -44,6 +46,8 @@ def calculate_batches_and_points(
     Returns:
         Tuple[int, float]: Number of batches and total points earned
     """
+    if any(x == float('inf') for x in [total_speedups, effective_training_time, points_per_batch, current_points]):
+        raise ValueError("Infinite values are not allowed.")
     if total_speedups < 0 or effective_training_time <= 0 or points_per_batch < 0 or current_points < 0:
         raise ValueError("Inputs must be non-negative and effective_training_time > 0.")
     num_batches = int(total_speedups // effective_training_time)
@@ -66,11 +70,17 @@ def calculate_efficiency_metrics(
     """
     if total_speedups < 0:
         raise ValueError("Total speedups cannot be negative.")
-    if total_speedups == 0:
-        return {"points_per_minute": 0}
+    if total_speedups == 0 or total_points == 0:
+        return {
+            "points_per_minute": 0.0,
+            "time_per_point": 0.0,
+            "efficiency_score": 0.0
+        }
     points_per_minute = total_points / total_speedups
+    time_per_point = total_speedups / total_points
     return {
         "points_per_minute": points_per_minute,
+        "time_per_point": time_per_point,
         "efficiency_score": points_per_minute * 100  # Normalized score
     }
 

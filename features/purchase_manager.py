@@ -4,27 +4,51 @@ Module for managing purchase data persistence and calculations.
 
 import pandas as pd
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
+import streamlit as st
+import plotly.express as px
 
-def load_purchases(csv_path: str) -> Optional[pd.DataFrame]:
+# Constants for file paths
+AUTO_PURCHASES_PATH = 'data/purchase_history.csv'
+MANUAL_PURCHASES_PATH = 'data/manual_purchases.csv'
+
+def load_purchases(auto_path: str = AUTO_PURCHASES_PATH, manual_path: str = MANUAL_PURCHASES_PATH) -> Tuple[Optional[pd.DataFrame], Optional[pd.DataFrame]]:
     """
-    Load purchases from CSV file.
-    Raises an exception if the file does not exist.
+    Load both automatic and manual purchases.
     
     Args:
-        csv_path (str): Path to CSV file
+        auto_path (str): Path to automatic purchases CSV
+        manual_path (str): Path to manual purchases CSV
     
     Returns:
-        Optional[pd.DataFrame]: Loaded data or None if error
+        Tuple[Optional[pd.DataFrame], Optional[pd.DataFrame]]: Auto and manual purchases
+    
+    Raises:
+        Exception: If file exists but cannot be read
     """
-    if not os.path.exists(csv_path):
-        raise FileNotFoundError(f"CSV file {csv_path} does not exist.")
+    auto_purchases = None
+    manual_purchases = None
+    
     try:
-        df = pd.read_csv(csv_path, parse_dates=['Date'])
-        return df
+        if os.path.exists(auto_path):
+            auto_purchases = pd.read_csv(auto_path, parse_dates=['Date'])
+        else:
+            raise Exception(f"Automatic purchases file not found: {auto_path}")
     except Exception as e:
-        raise Exception(f"Error loading CSV file {csv_path}: {str(e)}")
+        st.error(f"Error loading automatic purchases: {str(e)}")
+        raise
+
+    try:
+        if os.path.exists(manual_path):
+            manual_purchases = pd.read_csv(manual_path, parse_dates=['Date'])
+        else:
+            raise Exception(f"Manual purchases file not found: {manual_path}")
+    except Exception as e:
+        st.error(f"Error loading manual purchases: {str(e)}")
+        raise
+    
+    return auto_purchases, manual_purchases
 
 def save_purchase(csv_path: str, purchase: Dict) -> bool:
     """
@@ -107,10 +131,10 @@ def calculate_purchase_stats(
 def export_combined_purchases(
     auto_purchases: Optional[pd.DataFrame],
     manual_purchases: Optional[pd.DataFrame],
-    output_path: str
+    output_path: str = 'data/combined_purchases.csv'
 ) -> bool:
     """
-    Export combined purchase history to CSV, handling missing columns gracefully.
+    Export combined purchase history to CSV.
     
     Args:
         auto_purchases (Optional[pd.DataFrame]): Automatic purchases
@@ -119,13 +143,13 @@ def export_combined_purchases(
     
     Returns:
         bool: Success status
+    Raises:
+        Exception: If file writing fails
     """
     try:
         dfs = []
-        
         if auto_purchases is not None and not auto_purchases.empty:
             auto_df = auto_purchases.copy()
-            # Standardize columns
             if 'Pack Name' not in auto_df.columns:
                 if 'Purchase Name' in auto_df.columns:
                     auto_df['Pack Name'] = auto_df['Purchase Name']
@@ -141,7 +165,6 @@ def export_combined_purchases(
                 auto_df['Speed-ups (min)'] = 0
             auto_df['Source'] = 'Automatic'
             dfs.append(auto_df[['Date', 'Pack Name', 'Amount', 'Speed-ups (min)', 'Source']])
-        
         if manual_purchases is not None and not manual_purchases.empty:
             manual_df = manual_purchases.copy()
             if 'Amount' not in manual_df.columns:
@@ -155,12 +178,207 @@ def export_combined_purchases(
             if 'Pack Name' not in manual_df.columns:
                 manual_df['Pack Name'] = ''
             dfs.append(manual_df[['Date', 'Pack Name', 'Amount', 'Speed-ups (min)', 'Source']])
-        
         if dfs:
             combined_df = pd.concat(dfs).sort_values('Date')
-            combined_df.to_csv(output_path, index=False)
+            try:
+                combined_df.to_csv(output_path, index=False)
+            except Exception as e:
+                raise Exception(f"Error exporting combined purchases: {str(e)}")
             return True
-        
         return False
     except Exception as e:
-        raise Exception(f"Error exporting combined purchases: {str(e)}") 
+        raise Exception(f"Error exporting combined purchases: {str(e)}")
+
+def render_purchase_tab():
+    """Render the purchase tab UI and handle interactions."""
+    st.header("Pack Purchase History")
+    
+    # Load purchase data
+    auto_purchases, manual_purchases = load_purchases()
+    
+    # Date range filter
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        date_range = st.date_input(
+            "Date Range",
+            value=(
+                datetime.now() - timedelta(days=30),
+                datetime.now()
+            ),
+            help="Filter purchases by date range"
+        )
+    with col2:
+        if st.button("🔄 Reload Data"):
+            st.experimental_rerun()
+
+    # Calculate and display summary metrics
+    stats = calculate_purchase_stats(auto_purchases, manual_purchases)
+
+    st.subheader("Combined Purchase Summary")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        total_spent = stats["total_spent_auto"] + stats["total_spent_manual"]
+        st.metric("Total Spent", f"R${total_spent:,.2f}")
+    with col2:
+        st.metric("Average Daily Spending", f"R${stats['avg_spending_per_day']:,.2f}")
+    with col3:
+        st.metric("Total Speed-ups", f"{stats['total_speedups']:,} min")
+
+    # Display spending trend chart
+    if not stats["spending_by_day"].empty:
+        fig = px.bar(
+            stats["spending_by_day"],
+            x='Date',
+            y='Amount',
+            title='Daily Spending',
+            labels={'Amount': 'Amount (R$)', 'Date': 'Date'},
+            template='plotly_dark'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Export combined history button
+    if st.button("📥 Export Combined History"):
+        try:
+            if export_combined_purchases(auto_purchases, manual_purchases):
+                st.success("Combined history exported successfully!")
+            else:
+                st.warning("No purchases to export")
+        except Exception as e:
+            st.error(f"Error exporting combined history: {str(e)}")
+
+    st.markdown("---")
+
+    # Manual Purchase Entry Form
+    st.subheader("Manual Purchase Entry")
+    with st.form("pack_purchase_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            purchase_date = st.date_input(
+                "Date of Purchase",
+                value=datetime.now(),
+                help="When did you purchase this pack?"
+            )
+            pack_name = st.text_input(
+                "Pack Name",
+                help="Name or description of the pack"
+            )
+
+        with col2:
+            total_spending = st.number_input(
+                "Total Spending (R$)",
+                min_value=0.0,
+                step=0.01,
+                help="How much did you spend on this pack?"
+            )
+            speedups_included = st.number_input(
+                "Speed-ups Included (min)",
+                min_value=0,
+                step=1,
+                help="How many speed-up minutes were included?"
+            )
+
+        submitted = st.form_submit_button("Add Purchase")
+
+        if submitted:
+            if pack_name and total_spending > 0:
+                try:
+                    new_purchase = {
+                        "Date": purchase_date,
+                        "Pack Name": pack_name,
+                        "Spending ($)": total_spending,
+                        "Speed-ups (min)": speedups_included
+                    }
+
+                    if save_purchase('data/manual_purchases.csv', new_purchase):
+                        st.success("Purchase added successfully!")
+                        st.experimental_rerun()
+                    else:
+                        st.error("Failed to save purchase")
+                except Exception as e:
+                    st.error(f"Error saving purchase: {str(e)}")
+            else:
+                st.error("Please fill in all required fields.")
+
+    st.markdown("---")
+
+    # Display purchase history tables
+    st.subheader("Purchase History")
+
+    # Combine and filter purchases
+    dfs = []
+    if auto_purchases is not None and not auto_purchases.empty:
+        auto_df = auto_purchases.copy()
+        # Standardize column names
+        auto_df = auto_df.rename(columns={
+            'Purchase Name': 'Pack Name',
+            'Value (R$)': 'Amount'
+        })
+        # Add missing columns with default values
+        if 'Speed-ups (min)' not in auto_df.columns:
+            auto_df['Speed-ups (min)'] = 0
+        auto_df['Source'] = 'Automatic'
+        dfs.append(auto_df[['Date', 'Pack Name', 'Amount', 'Speed-ups (min)', 'Source']])
+
+    if manual_purchases is not None and not manual_purchases.empty:
+        manual_df = manual_purchases.copy()
+        # Standardize column names
+        manual_df = manual_df.rename(columns={
+            'Spending ($)': 'Amount'
+        })
+        manual_df['Source'] = 'Manual'
+        dfs.append(manual_df[['Date', 'Pack Name', 'Amount', 'Speed-ups (min)', 'Source']])
+
+    if dfs:
+        combined_df = pd.concat(dfs)
+        combined_df['Date'] = pd.to_datetime(combined_df['Date'])
+        combined_df = combined_df[
+            (combined_df['Date'].dt.date >= date_range[0]) &
+            (combined_df['Date'].dt.date <= date_range[1])
+        ].sort_values('Date', ascending=False)
+
+        # Display the combined table
+        st.dataframe(
+            combined_df,
+            use_container_width=True,
+            hide_index=True
+        )
+
+        # Delete purchase functionality
+        st.subheader("Delete Purchase")
+        
+        # Create formatted options for selectbox
+        purchase_options = []
+        for idx, row in combined_df.iterrows():
+            formatted_date = row['Date'].strftime('%Y-%m-%d')
+            formatted_amount = f"R${row['Amount']:,.2f}"
+            option_text = f"{formatted_date} - {row['Pack Name']} - {formatted_amount}"
+            purchase_options.append((idx, option_text))
+        
+        # Create selectbox with formatted options
+        selected_option = st.selectbox(
+            "Select purchase to delete",
+            options=[opt[1] for opt in purchase_options],
+            format_func=lambda x: x
+        )
+        
+        # Get the selected index from the options list
+        selected_idx = next(idx for idx, text in purchase_options if text == selected_option)
+
+        if st.button("🗑️ Delete Selected Purchase"):
+            if manual_purchases is not None and not manual_purchases.empty:
+                # Remove from manual purchases if it's a manual entry
+                if combined_df.loc[selected_idx, 'Source'] == 'Manual':
+                    manual_purchases = manual_purchases[
+                        ~(manual_purchases['Date'] == combined_df.loc[selected_idx, 'Date']) &
+                        ~(manual_purchases['Pack Name'] == combined_df.loc[selected_idx, 'Pack Name'])
+                    ]
+                    # Update CSV file
+                    manual_purchases.to_csv('data/manual_purchases.csv', index=False)
+                    st.success("Purchase deleted successfully!")
+                    st.experimental_rerun()
+                else:
+                    st.warning("Cannot delete automatic purchases")
+            else:
+                st.error("No manual purchases available to delete")
+    else:
+        st.info("No purchase history available. Add your first purchase using the form above.") 
