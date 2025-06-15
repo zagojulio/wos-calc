@@ -24,6 +24,8 @@ def format_duration(minutes: float) -> str:
     Returns:
         str: Formatted duration string
     """
+    if minutes < 0:
+        return f"{int(minutes)}m"
     days = int(minutes // (24 * 60))
     hours = int((minutes % (24 * 60)) // 60)
     mins = int(minutes % 60)

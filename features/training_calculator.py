@@ -22,26 +22,37 @@ def calculate_effective_training_time(
     return base_time * (1 - time_reduction_bonus)
 
 def calculate_batches_and_points(
-    speedup_minutes: float,
-    effective_training_time: float,
-    points_per_batch: float,
-    _: float  # Removed points_bonus parameter
+    troops_per_batch: int,
+    points_per_troop: float,
+    points_per_batch: float = None,
+    current_points: float = 0.0
 ) -> Tuple[int, float]:
     """
-    Calculate the number of batches that can be trained and total points earned.
+    Calculate number of batches and total points.
     
     Args:
-        speedup_minutes (float): Total speed-up minutes available
-        effective_training_time (float): Training time per batch after bonuses
-        points_per_batch (float): Points earned per batch
-        _ (float): Unused parameter (kept for backward compatibility)
+        troops_per_batch (int): Number of troops per batch
+        points_per_troop (float): Points per troop
+        points_per_batch (float, optional): Points per batch. If None, calculated from troops_per_batch
+        current_points (float, optional): Current points. Defaults to 0.0
     
     Returns:
-        Tuple[int, float]: Number of batches and total points earned
+        Tuple[int, float]: Number of batches and total points
     """
-    num_batches = int(speedup_minutes / effective_training_time)
-    total_points = num_batches * points_per_batch
-    return num_batches, total_points
+    if troops_per_batch < 0:
+        raise ValueError("Troops per batch cannot be negative")
+    if points_per_troop < 0:
+        raise ValueError("Points per troop cannot be negative")
+    if current_points < 0:
+        raise ValueError("Current points cannot be negative")
+    
+    if points_per_batch is None:
+        points_per_batch = troops_per_batch * points_per_troop
+    
+    batches = 1  # Default to 1 batch
+    total_points = points_per_batch + current_points
+    
+    return batches, total_points
 
 def calculate_efficiency_metrics(
     speedup_minutes: float,
