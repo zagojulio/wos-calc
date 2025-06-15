@@ -134,7 +134,6 @@ if 'auto_purchases' not in st.session_state:
 if 'manual_purchases' not in st.session_state:
     st.session_state.manual_purchases = None
 
-
 # Main tabs navigation using st.tabs
 tab1, tab2 = st.tabs(["Training Analysis", "Pack Purchases"])
 
@@ -308,9 +307,10 @@ with tab2:
     # Clear sidebar content on Pack Purchases tab
     st.sidebar.empty()
 
-    # Pack Purchases tab content remains unchanged
+    # Pack Purchases tab content
     st.header("Pack Purchase History")
     
+    # Load purchase data if not in session state
     if st.session_state.auto_purchases is None:
         try:
             st.session_state.auto_purchases = load_purchases('data/purchase_history.csv')
@@ -323,6 +323,7 @@ with tab2:
         except Exception as e:
             st.error(f"Error loading manual purchases: {str(e)}")
 
+    # Date range filter
     col1, col2 = st.columns([3, 1])
     with col1:
         date_range = st.date_input(
@@ -342,6 +343,7 @@ with tab2:
             except Exception as e:
                 st.error(f"Error reloading data: {str(e)}")
 
+    # Calculate and display summary metrics
     stats = calculate_purchase_stats(
         st.session_state.auto_purchases,
         st.session_state.manual_purchases
@@ -357,6 +359,7 @@ with tab2:
     with col3:
         st.metric("Total Speed-ups", f"{stats['total_speedups']:,} min")
 
+    # Display spending trend chart
     if not stats["spending_by_day"].empty:
         fig = px.bar(
             stats["spending_by_day"],
@@ -368,6 +371,7 @@ with tab2:
         )
         st.plotly_chart(fig, use_container_width=True)
 
+    # Export combined history button
     if st.button("📥 Export Combined History"):
         try:
             export_path = 'data/combined_purchases.csv'
@@ -384,31 +388,7 @@ with tab2:
 
     st.markdown("---")
 
-    st.subheader("Automatic Purchase History")
-    if st.session_state.auto_purchases is not None and not st.session_state.auto_purchases.empty:
-        df_auto = st.session_state.auto_purchases.copy()
-        df_auto['Date'] = pd.to_datetime(df_auto['Date'])
-        df_auto = df_auto[
-            (df_auto['Date'].dt.date >= date_range[0]) &
-            (df_auto['Date'].dt.date <= date_range[1])
-        ]
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Total Spent (Auto)", f"R${stats['total_spent_auto']:,.2f}")
-        with col2:
-            st.metric("Total Purchases (Auto)", f"{len(df_auto):,}")
-
-        st.dataframe(
-            df_auto,
-            use_container_width=True,
-            hide_index=True
-        )
-    else:
-        st.info("No automatic purchase history available.")
-
-    st.markdown("---")
-
+    # Manual Purchase Entry Form
     st.subheader("Manual Purchase Entry")
     with st.form("pack_purchase_form"):
         col1, col2 = st.columns(2)
@@ -465,34 +445,86 @@ with tab2:
             else:
                 st.error("Please fill in all required fields.")
 
-    st.subheader("Manual Purchase History")
+    st.markdown("---")
+
+    # Display purchase history tables
+    st.subheader("Purchase History")
+
+    # Combine and filter purchases
+    dfs = []
+    if st.session_state.auto_purchases is not None and not st.session_state.auto_purchases.empty:
+        auto_df = st.session_state.auto_purchases.copy()
+        # Standardize column names
+        auto_df = auto_df.rename(columns={
+            'Purchase Name': 'Pack Name',
+            'Value (R$)': 'Amount'
+        })
+        # Add missing columns with default values
+        if 'Speed-ups (min)' not in auto_df.columns:
+            auto_df['Speed-ups (min)'] = 0
+        auto_df['Source'] = 'Automatic'
+        dfs.append(auto_df[['Date', 'Pack Name', 'Amount', 'Speed-ups (min)', 'Source']])
+
     if st.session_state.manual_purchases is not None and not st.session_state.manual_purchases.empty:
-        df_manual = st.session_state.manual_purchases.copy()
-        df_manual['Date'] = pd.to_datetime(df_manual['Date'])
-        df_manual = df_manual[
-            (df_manual['Date'].dt.date >= date_range[0]) &
-            (df_manual['Date'].dt.date <= date_range[1])
-        ]
+        manual_df = st.session_state.manual_purchases.copy()
+        # Standardize column names
+        manual_df = manual_df.rename(columns={
+            'Spending ($)': 'Amount'
+        })
+        manual_df['Source'] = 'Manual'
+        dfs.append(manual_df[['Date', 'Pack Name', 'Amount', 'Speed-ups (min)', 'Source']])
 
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Total Spent (Manual)", f"R${stats['total_spent_manual']:,.2f}")
-        with col2:
-            st.metric("Total Speed-ups (Manual)", f"{stats['total_speedups']:,} min")
+    if dfs:
+        combined_df = pd.concat(dfs)
+        combined_df['Date'] = pd.to_datetime(combined_df['Date'])
+        combined_df = combined_df[
+            (combined_df['Date'].dt.date >= date_range[0]) &
+            (combined_df['Date'].dt.date <= date_range[1])
+        ].sort_values('Date', ascending=False)
 
+        # Display the combined table
         st.dataframe(
-            df_manual,
+            combined_df,
             use_container_width=True,
             hide_index=True
         )
 
-        if st.button("Clear Manual Purchase History"):
-            try:
-                if os.path.exists('data/manual_purchases.csv'):
-                    os.remove('data/manual_purchases.csv')
-                st.session_state.manual_purchases = None
-                st.experimental_rerun()
-            except Exception as e:
-                st.error(f"Error clearing manual purchases: {str(e)}")
+        # Delete purchase functionality
+        st.subheader("Delete Purchase")
+        
+        # Create formatted options for selectbox
+        purchase_options = []
+        for idx, row in combined_df.iterrows():
+            formatted_date = row['Date'].strftime('%Y-%m-%d')
+            formatted_amount = f"R${row['Amount']:,.2f}"
+            option_text = f"{formatted_date} - {row['Pack Name']} - {formatted_amount}"
+            purchase_options.append((idx, option_text))
+        
+        # Create selectbox with formatted options
+        selected_option = st.selectbox(
+            "Select purchase to delete",
+            options=[opt[1] for opt in purchase_options],
+            format_func=lambda x: x
+        )
+        
+        # Get the selected index from the options list
+        selected_idx = next(idx for idx, text in purchase_options if text == selected_option)
+
+        if st.button("🗑️ Delete Selected Purchase"):
+            if st.session_state.manual_purchases is not None and not st.session_state.manual_purchases.empty:
+                # Remove from manual purchases if it's a manual entry
+                if combined_df.loc[selected_idx, 'Source'] == 'Manual':
+                    st.session_state.manual_purchases = st.session_state.manual_purchases[
+                        ~(st.session_state.manual_purchases['Date'] == combined_df.loc[selected_idx, 'Date']) &
+                        ~(st.session_state.manual_purchases['Pack Name'] == combined_df.loc[selected_idx, 'Pack Name'])
+                    ]
+                    # Update CSV file
+                    st.session_state.manual_purchases.to_csv('data/manual_purchases.csv', index=False)
+                    st.success("Purchase deleted successfully!")
+                    st.experimental_rerun()
+                else:
+                    st.warning("Cannot delete automatic purchases")
+            else:
+                st.error("No manual purchases available to delete")
     else:
-        st.info("No manual purchase history available. Add your first purchase using the form above.")
+        st.info("No purchase history available. Add your first purchase using the form above.")
