@@ -59,9 +59,10 @@ def test_render_training_analysis():
     assert effective_time == params['base_training_time'] * (1 - params['time_reduction_bonus'])
     
     points_per_batch = params['troops_per_batch'] * params['points_per_troop']
+    total_speedups = params['general_speedups'] + params['training_speedups']
     batches, total_points = calculate_batches_and_points(
-        params['troops_per_batch'],
-        params['points_per_troop'],
+        total_speedups,
+        effective_time,
         points_per_batch,
         0.0
     )
@@ -70,7 +71,7 @@ def test_render_training_analysis():
     
     # Calculate efficiency metrics
     efficiency = calculate_efficiency_metrics(
-        effective_time,
+        total_speedups,
         total_points
     )
     assert isinstance(efficiency, dict)
@@ -79,11 +80,42 @@ def test_render_training_analysis():
     
     speedups_needed = calculate_speedups_needed(
         params['target_points'],
-        params['troops_per_batch'] * params['points_per_troop'],
+        points_per_batch,
         0.0,
         effective_time
     )
     assert speedups_needed >= 0
+
+def test_total_points_gained_metric():
+    """Test the new 'Total Points Gained with Speedups' metric calculation."""
+    params = {
+        'general_speedups': 1000.0,
+        'training_speedups': 500.0,
+        'base_training_time': 60.0,  # 1 hour
+        'troops_per_batch': 100,
+        'time_reduction_bonus': 0.1,  # 10%
+        'points_per_troop': 10.0,
+        'target_points': 5000.0
+    }
+    
+    # Calculate expected total points
+    effective_time = calculate_effective_training_time(
+        params['base_training_time'],
+        params['time_reduction_bonus']
+    )
+    points_per_batch = params['troops_per_batch'] * params['points_per_troop']
+    total_speedups = params['general_speedups'] + params['training_speedups']
+    batches, total_points = calculate_batches_and_points(
+        total_speedups,
+        effective_time,
+        points_per_batch,
+        0.0
+    )
+    
+    # Verify the calculation is correct
+    expected_batches = int(total_speedups // effective_time)
+    expected_total_points = expected_batches * points_per_batch
+    assert total_points == expected_total_points
 
 def test_edge_cases():
     """Test edge cases in training calculations."""
@@ -108,8 +140,8 @@ def test_edge_cases():
     with pytest.raises(ValueError):
         points_per_batch = params['troops_per_batch'] * params['points_per_troop']
         calculate_batches_and_points(
-            params['troops_per_batch'],
-            params['points_per_troop'],
+            params['general_speedups'] + params['training_speedups'],
+            effective_time,
             points_per_batch,
             0.0
         )
@@ -132,10 +164,11 @@ def test_edge_cases():
         )
     
     with pytest.raises(ValueError):
+        points_per_batch = params['troops_per_batch'] * params['points_per_troop']
         calculate_batches_and_points(
-            params['troops_per_batch'],
-            params['points_per_troop'],
-            params['troops_per_batch'] * params['points_per_troop'],
+            params['general_speedups'] + params['training_speedups'],
+            60.0,  # Use valid effective time
+            points_per_batch,
             0.0
         )
 
@@ -146,7 +179,7 @@ def test_input_validation():
         calculate_effective_training_time(-100.0, 0.2)
     
     with pytest.raises(ValueError):
-        calculate_batches_and_points(-100, 830.0, -100*830.0, 0.0)
+        calculate_batches_and_points(-100, 60.0, 1000.0, 0.0)
     
     # Test invalid bonus percentage
     with pytest.raises(ValueError):
@@ -155,8 +188,24 @@ def test_input_validation():
     # Test invalid speed-up values
     with pytest.raises(ValueError):
         calculate_speedups_needed(
+            target_points=1000.0,
             points_per_batch=100.0,
             current_points=-1000.0,
-            target_points=1000.0,
             effective_training_time=10.0
-        ) 
+        )
+
+def test_metric_layout_improvements():
+    """Test that the new 3-column layout works correctly."""
+    params = {
+        'general_speedups': 1000.0,
+        'training_speedups': 500.0,
+        'base_training_time': 60.0,
+        'troops_per_batch': 100,
+        'time_reduction_bonus': 0.1,
+        'points_per_troop': 10.0,
+        'target_points': 5000.0
+    }
+    
+    # The function should run without errors with the new layout
+    render_training_analysis(params)
+    # This test verifies the new 3-column layout doesn't cause issues 

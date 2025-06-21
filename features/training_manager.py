@@ -184,20 +184,53 @@ def render_training_analysis(params):
     # Calculate remaining speedups
     remaining_speedups = total_speedups - (batches * effective_time)
 
-    # Display results
+    # Display results with improved layout
     st.subheader("Training Analysis Results")
     
-    col1, col2 = st.columns(2)
+    # First row of metrics
+    col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Effective Training Time", f"{effective_time:.1f} minutes")
-        st.metric("Total Points per Batch", f"{points_per_batch:,.0f}")
-        st.metric("Batches to Target", f"{batches:,.1f}")
-    
+        st.metric(
+            "Effective Training Time", 
+            f"{effective_time:.1f} minutes",
+            help="Training time per batch after applying time reduction bonuses"
+        )
     with col2:
-        st.metric("Time to Target", f"{batches * effective_time:,.1f} minutes")
-        st.metric("Speed-ups Needed", f"{speedups_needed:,.0f}")
-        st.metric("Speed-ups Remaining", f"{remaining_speedups:,.0f}")
+        st.metric(
+            "Total Points per Batch", 
+            f"{points_per_batch:,.0f}",
+            help="Points earned from training one batch of troops"
+        )
+    with col3:
+        st.metric(
+            "Total Points Gained with Speedups", 
+            f"{total_points:,.0f}",
+            help="Total points you can earn using all available speedups"
+        )
+    
+    # Second row of metrics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric(
+            "Time to Target", 
+            f"{batches * effective_time:,.1f} minutes",
+            help="Total time needed to reach your target points"
+        )
+    with col2:
+        st.metric(
+            "Speed-ups Needed", 
+            f"{speedups_needed:,.0f}",
+            help="Additional speed-up minutes required to reach target"
+        )
+    with col3:
+        st.metric(
+            "Speed-ups Remaining", 
+            f"{remaining_speedups:,.0f}",
+            help="Speed-up minutes left after reaching target"
+        )
 
     # Display warning if speedups are insufficient
     if speedups_needed > 0:
-        st.warning(f"You need {speedups_needed:,.0f} more speed-up minutes to reach your target.") 
+        st.warning(
+            f"You need {speedups_needed:,.0f} more speed-up minutes to reach your target of {params['target_points']:,.0f} points."
+        ) 
