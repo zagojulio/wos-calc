@@ -95,21 +95,31 @@ def render_pack_value_comparison_tab():
             )
             if remove_idx != "-":
                 if st.button("Remove Selected", key="remove_btn"):
+                    st.session_state.remove_confirm = remove_idx
+            if st.session_state.get("remove_confirm") == remove_idx:
+                if st.button(f"Confirm Remove '{remove_idx.split(' ($')[0]}'", key="remove_confirm_btn"):
                     idx = df.index[df["Pack Name"] == remove_idx.split(" ($")[0]].tolist()
                     if idx:
-                        if st.confirm(f"Are you sure you want to remove '{remove_idx.split(' ($')[0]}'?"):
-                            history.pop(idx[0])
-                            st.session_state.pack_value_history = history
-                            save_pack_history(history)
-                            st.success("Removed successfully.")
-                            st.experimental_rerun()
+                        history.pop(idx[0])
+                        st.session_state.pack_value_history = history
+                        save_pack_history(history)
+                        st.success("Removed successfully.")
+                        st.session_state.remove_confirm = None
+                        st.experimental_rerun()
+                if st.button("Cancel", key="remove_cancel_btn"):
+                    st.session_state.remove_confirm = None
         with col2:
             if st.button("Clear All", key="clear_all_btn"):
-                if st.confirm("Are you sure you want to clear all pack history? This cannot be undone."):
+                st.session_state.clear_all_confirm = True
+            if st.session_state.get("clear_all_confirm"):
+                if st.button("Confirm Clear All", key="clear_all_confirm_btn"):
                     st.session_state.pack_value_history = []
                     save_pack_history([])
                     st.success("All history cleared.")
+                    st.session_state.clear_all_confirm = False
                     st.experimental_rerun()
+                if st.button("Cancel", key="clear_all_cancel_btn"):
+                    st.session_state.clear_all_confirm = False
         with col3:
             csv = df.to_csv(index=False).encode("utf-8")
             st.download_button(
