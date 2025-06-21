@@ -1,0 +1,220 @@
+[
+  {
+    "name": "Hall of Chiefs Pack",
+    "datetime": "2025-06-16T13:25:08",
+    "rewards": {
+      "diamonds": 2500,
+      "1h_speedups": 16,
+      "gold_100": 25,
+      "meat_10k": 500,
+      "wood_10k": 500,
+      "coal_10k": 100,
+      "iron_10k": 25,
+      "stone_10k": 25,
+      "5m_speedups": 160,
+      "crate": 1
+    }
+  },
+  {
+    "name": "Fishing Pro Set",
+    "datetime": "2025-06-16T06:50:15",
+    "rewards": {
+      "diamonds": 500,
+      "ticket": 1,
+      "map": 1,
+      "special_item": 1,
+      "fishing_items": 5,
+      "gold_100": 5,
+      "meat_10k": 80,
+      "wood_10k": 80,
+      "coal_10k": 20,
+      "stone_10k": 5,
+      "shell_token": 200,
+      "crate": 1
+    }
+  },
+  {
+    "name": "Fast Development Pack",
+    "datetime": "2025-06-16T07:02:02",
+    "rewards": {
+      "diamonds": 10000,
+      "golden_keys": 40,
+      "1h_speedups": 40,
+      "gold_100": 60,
+      "meat_10k": 2000,
+      "wood_10k": 2000,
+      "coal_10k": 400,
+      "stone_10k": 100,
+      "crate": 1,
+      "5m_speedups": 960
+    }
+  },
+  {
+    "name": "Steel Pack",
+    "datetime": "2025-06-15T20:20:17",
+    "rewards": {
+      "diamonds": 10000,
+      "gold_100": 60,
+      "meat_10k": 520,
+      "wood_10k": 520,
+      "coal_10k": 96,
+      "stone_10k": 24,
+      "crate": 1,
+      "steel": 160000
+    }
+  },
+  {
+    "name": "Building Benefits Card",
+    "datetime": "2025-06-15T21:14:25",
+    "rewards": {
+      "diamonds": 5000,
+      "resource_chests": 50,
+      "1h_speedups": 80,
+      "gold_100": 40,
+      "green_chest": 1,
+      "steel": 80000
+    }
+  }
+]
+
+[
+  {
+    "name": "City Boost Pack",
+    "datetime": "2025-06-15T19:03:35",
+    "rewards": {
+      "diamonds": 5000,
+      "1h_speedups": 36,
+      "gold_100": 40,
+      "meat_10k": 1000,
+      "wood_10k": 1000,
+      "coal_10k": 200,
+      "stone_10k": 50,
+      "5m_speedups": 400,
+      "crate": 1
+    }
+  },
+  {
+    "name": "Uncommon Lucky Chip Pack",
+    "datetime": "2025-06-13T20:50:31",
+    "rewards": {
+      "lucky_chips": 10,
+      "combat_books": 4,
+      "tech_books": 4,
+      "exp_books_5k": 10,
+      "meat_100k": 150,
+      "wood_100k": 150,
+      "crate": 1
+    }
+  },
+  {
+    "name": "Daily Deals",
+    "datetime": "2025-06-14T16:04:28",
+    "rewards": {
+      "diamonds": 3000,
+      "chests": 4,
+      "hero_shards": 6,
+      "combat_books": 12,
+      "exp_books_5k": 50,
+      "crate": 3
+    }
+  },
+  {
+    "name": "Troops Training Pack",
+    "datetime": "2025-06-14T18:50:35",
+    "rewards": {
+      "diamonds": 2500,
+      "1h_speedups_training": 18,
+      "gold_100": 25,
+      "meat_10k": 500,
+      "wood_10k": 500,
+      "coal_10k": 100,
+      "stone_10k": 25,
+      "5m_speedups_training": 200,
+      "crate": 1
+    }
+  },
+  {
+    "name": "Chief Stamina Pack",
+    "datetime": "2025-06-15T13:26:35",
+    "rewards": {
+      "diamonds": 500,
+      "gold_100": 5,
+      "stamina_cans": 15,
+      "meat_10k": 100,
+      "wood_10k": 100,
+      "coal_10k": 20,
+      "stone_10k": 5,
+      "crate": 1
+    }
+  },
+  {
+    "name": "Troops Training Pack",
+    "datetime": "2025-06-14T18:52:14",
+    "rewards": {
+      "diamonds": 5000,
+      "1h_speedups_training": 36,
+      "gold_100": 40,
+      "meat_10k": 1000,
+      "wood_10k": 1000,
+      "coal_10k": 200,
+      "stone_10k": 50,
+      "5m_speedups_training": 400,
+      "crate": 1
+    }
+  },
+  {
+    "name": "Daily Deals",
+    "datetime": "2025-06-15T14:28:19",
+    "rewards": {
+      "diamonds": 3000,
+      "chests": 4,
+      "hero_shards": 6,
+      "combat_books": 12,
+      "exp_books_5k": 50,
+      "crate": 3
+    }
+  },
+  {
+    "name": "Mastery Material Special",
+    "datetime": "2025-06-14T20:16:48",
+    "rewards": {
+      "diamonds": 2500,
+      "mastery_runes": 20,
+      "gold_100": 25,
+      "meat_10k": 125,
+      "wood_10k": 125,
+      "black_rock_1k": 250,
+      "white_rock_1k": 65,
+      "crate": 1
+    }
+  },
+  {
+    "name": "Troops Training Pack",
+    "datetime": "2025-06-14T19:27:04",
+    "rewards": {
+      "diamonds": 10000,
+      "1h_speedups_training": 72,
+      "gold_100": 60,
+      "meat_10k": 2000,
+      "wood_10k": 2000,
+      "coal_10k": 400,
+      "stone_10k": 100,
+      "5m_speedups_training": 800,
+      "crate": 1
+    }
+  },
+  {
+    "name": "Chief Stamina Pack",
+    "datetime": "2025-06-15T19:01:12",
+    "rewards": {
+      "diamonds": 2500,
+      "gold_100": 25,
+      "stamina_cans": 50,
+      "meat_10k": 500,
+      "wood_10k": 500,
+      "coal_10k": 100,
+      "stone_10k": 25,
+      "crate": 1
+    }
+  }
+]
