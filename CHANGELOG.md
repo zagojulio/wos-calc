@@ -1,6 +1,26 @@
 # Changelog
 
+## [v0.2.2] - 2025-06-15
+
+### Added
+- Restored "Total Points" metric calculation and display in the Training Analysis Results section.
+  - Total Points calculated as batches * points_per_batch + current_points.
+  - Display updates reactively with parameter changes.
+  - Metric formatted with thousands separators for readability.
+- Removed redundant "Batches to Target" metric to simplify UI.
+
 ## [Unreleased]
+
+### Added
+- FEAT: Implemented Pack Contents Summary feature in Pack Purchases tab. Aggregates all pack rewards, converts speed-ups to total minutes, and displays a sortable, searchable summary table with a summary row. Includes error handling and is fully reactive to data changes.
+
+### Changed
+
+### Fixed
+
+### Tested
+
+## [v0.2.1] - 2025-06-15
 
 ### Added
 - Core calculation engine for training times and points
@@ -18,12 +38,21 @@
   - Combined statistics and filtering
   - Export functionality
   - Speed-up tracking integration
+- Modularized codebase by splitting `app.py` into feature-specific modules:
+  - `features/ui_manager.py` for UI components and styling
+  - `features/training_manager.py` for training tab logic and UI
+  - `utils/session_manager.py` for Streamlit session state management
+- Comprehensive unit and integration tests added for new modules
+- Improved error handling and type hints in modular components
 
 ### Changed
 - Unified purchase data display and interaction
 - Improved UI organization and layout
 - Enhanced error handling and data validation
 - Optimized calculation performance
+- Refactored app architecture to improve maintainability and scalability
+- Updated session state management across modules for consistency
+- Enhanced test coverage to 62% with focus on core calculation and purchase management logic
 
 ### Fixed
 - CSV file operation safety improvements
@@ -38,6 +67,7 @@
 - Error handling validation
 - Current test coverage: 62%
 - All critical paths verified
+- Verified all modular components run without regression and maintain UI/UX consistency
 
 ## [v0.2.0] - 2025-06-15
 
