@@ -19,7 +19,7 @@ def main():
     init_session_state()
 
     # Main tabs navigation
-    tab1, tab2 = st.tabs(["Training Analysis", "Pack Purchases"])
+    tab1, tab2, tab3 = st.tabs(["Training Analysis", "Pack Purchases", "Pack Value Comparison"])
 
     # Training Analysis Tab
     with tab1:
@@ -32,6 +32,12 @@ def main():
     with tab2:
         # Render purchase tab UI and handle interactions
         render_purchase_tab()
+
+    # Pack Value Comparison Tab
+    with tab3:
+        # Render the new pack value comparison tab
+        from features.pack_value_comparison import render_pack_value_comparison_tab
+        render_pack_value_comparison_tab()
 
 if __name__ == "__main__":
     main()

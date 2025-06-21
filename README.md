@@ -23,6 +23,13 @@ A web-based tool for optimizing resource investments and training strategies in 
 - Export combined purchase history
 - Summarized spending and inventory insights
 
+### 📦 Pack Value Comparison
+- Add, compare, and export pack purchase data
+- Calculate cost per speed-up minute
+- Sortable, persistent history table
+- Remove individual or all entries with confirmation
+- Export to CSV
+
 ## 📦 Setup
 
 1. Install Python 3.8 or higher  
@@ -43,6 +50,7 @@ streamlit run app.py
 3. Navigate between available tools:
    - Training Analysis
    - Pack Purchases
+   - Pack Value Comparison
 
 4. Input Parameters (Training):
    - Total Speed-up Minutes Available
