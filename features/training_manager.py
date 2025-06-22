@@ -20,7 +20,6 @@ def render_training_sidebar():
             days = st.number_input(
                 "Days",
                 min_value=0,
-                value=get_training_params().get('days', 0),
                 step=1,
                 key="days"
             )
@@ -28,7 +27,6 @@ def render_training_sidebar():
                 "Minutes",
                 min_value=0,
                 max_value=59,
-                value=get_training_params().get('minutes', 50),
                 step=1,
                 key="minutes"
             )
@@ -37,7 +35,6 @@ def render_training_sidebar():
                 "Hours",
                 min_value=0,
                 max_value=23,
-                value=get_training_params().get('hours', 4),
                 step=1,
                 key="hours"
             )
@@ -45,7 +42,6 @@ def render_training_sidebar():
                 "Seconds",
                 min_value=0,
                 max_value=59,
-                value=get_training_params().get('seconds', 0),
                 step=1,
                 key="seconds"
             )
@@ -55,7 +51,6 @@ def render_training_sidebar():
         troops_per_batch = st.number_input(
             "Troops per Batch",
             min_value=1,
-            value=get_training_params().get('troops_per_batch', 426),
             step=1,
             help="Number of troops trained in each batch",
             key="troops_per_batch"
@@ -63,13 +58,12 @@ def render_training_sidebar():
         points_per_troop = st.number_input(
             "Points per Troop",
             min_value=1.0,
-            value=get_training_params().get('points_per_troop', 830.0),
             step=1.0,
             help="Base points earned per troop",
             key="points_per_troop"
         )
 
-        # Update session state with new values
+        # Sync widget values with training_params session state
         update_training_params({
             'days': days,
             'hours': hours,

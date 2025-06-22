@@ -14,6 +14,7 @@ def init_session_state():
     if 'manual_purchases' not in st.session_state:
         st.session_state.manual_purchases = None
 
+    # Initialize training parameters - only set defaults if not already present
     if 'training_params' not in st.session_state:
         st.session_state.training_params = {
             'days': 0,
@@ -24,7 +25,7 @@ def init_session_state():
             'points_per_troop': 830.0
         }
 
-    # Initialize speed-up inventory
+    # Initialize speed-up inventory - only set defaults if not already present
     if 'speedup_inventory' not in st.session_state:
         st.session_state.speedup_inventory = {
             'general': 18000.0,
@@ -32,6 +33,30 @@ def init_session_state():
             'training': 1515.0,
             'research': 0.0
         }
+
+    # Initialize widget keys for training parameters - only set defaults if not already present
+    if 'days' not in st.session_state:
+        st.session_state.days = st.session_state.training_params['days']
+    if 'hours' not in st.session_state:
+        st.session_state.hours = st.session_state.training_params['hours']
+    if 'minutes' not in st.session_state:
+        st.session_state.minutes = st.session_state.training_params['minutes']
+    if 'seconds' not in st.session_state:
+        st.session_state.seconds = st.session_state.training_params['seconds']
+    if 'troops_per_batch' not in st.session_state:
+        st.session_state.troops_per_batch = st.session_state.training_params['troops_per_batch']
+    if 'points_per_troop' not in st.session_state:
+        st.session_state.points_per_troop = st.session_state.training_params['points_per_troop']
+
+    # Initialize widget keys for speed-up inventory - only set defaults if not already present
+    if 'speedup_general' not in st.session_state:
+        st.session_state.speedup_general = st.session_state.speedup_inventory['general']
+    if 'speedup_construction' not in st.session_state:
+        st.session_state.speedup_construction = st.session_state.speedup_inventory['construction']
+    if 'speedup_training' not in st.session_state:
+        st.session_state.speedup_training = st.session_state.speedup_inventory['training']
+    if 'speedup_research' not in st.session_state:
+        st.session_state.speedup_research = st.session_state.speedup_inventory['research']
 
     # Initialize Hall of Chiefs session state
     if 'hall_of_chiefs_construction_entries' not in st.session_state:

@@ -17,14 +17,10 @@ def render_speedup_inventory_sidebar() -> Dict[str, float]:
     with st.sidebar.expander("Speed-up Minutes Inventory", expanded=True):
         st.subheader("Available Speed-ups by Category")
         
-        # Get current inventory
-        inventory = get_speedup_inventory()
-        
         # General speed-ups (usable for any category)
         general_speedups = st.number_input(
             "General",
             min_value=0.0,
-            value=inventory.get('general', 0.0),
             step=100.0,
             help="General purpose speed-up minutes (usable for any category)",
             key="speedup_general"
@@ -34,7 +30,6 @@ def render_speedup_inventory_sidebar() -> Dict[str, float]:
         construction_speedups = st.number_input(
             "Construction",
             min_value=0.0,
-            value=inventory.get('construction', 0.0),
             step=100.0,
             help="Speed-up minutes specifically for construction activities",
             key="speedup_construction"
@@ -44,7 +39,6 @@ def render_speedup_inventory_sidebar() -> Dict[str, float]:
         training_speedups = st.number_input(
             "Training",
             min_value=0.0,
-            value=inventory.get('training', 0.0),
             step=100.0,
             help="Speed-up minutes specifically for troop training",
             key="speedup_training"
@@ -54,7 +48,6 @@ def render_speedup_inventory_sidebar() -> Dict[str, float]:
         research_speedups = st.number_input(
             "Research",
             min_value=0.0,
-            value=inventory.get('research', 0.0),
             step=100.0,
             help="Speed-up minutes specifically for research activities",
             key="speedup_research"
@@ -70,7 +63,7 @@ def render_speedup_inventory_sidebar() -> Dict[str, float]:
             help="Total speed-up minutes across all categories"
         )
         
-        # Update session state
+        # Sync widget values with speedup_inventory session state
         new_inventory = {
             'general': general_speedups,
             'construction': construction_speedups,
