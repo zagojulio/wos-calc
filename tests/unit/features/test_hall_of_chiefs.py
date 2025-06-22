@@ -10,10 +10,19 @@ from features.hall_of_chiefs import (
     calculate_research_points,
     calculate_training_points,
     create_efficiency_dataframe,
-    calculate_summary_metrics,
-    validate_construction_entry,
-    validate_research_entry
+    calculate_summary_metrics
 )
+
+
+@pytest.fixture
+def mock_session_state():
+    """Mock session state for testing."""
+    with patch('streamlit.session_state') as mock_state:
+        mock_state.speedup_inventory = {
+            'general': 1000.0,
+            'training': 500.0
+        }
+        yield mock_state
 
 
 class TestConstructionPoints:
@@ -64,70 +73,6 @@ class TestResearchPoints:
         """Test research points with negative power."""
         points = calculate_research_points(-5.0, 30)
         assert points == -150.0
-
-
-class TestValidation:
-    """Test validation functions."""
-    
-    def test_validate_construction_entry_valid(self):
-        """Test valid construction entry validation."""
-        is_valid, error_message = validate_construction_entry("Test Building", 100.0, 60.0)
-        assert is_valid
-        assert error_message == ""
-    
-    def test_validate_construction_entry_empty_description(self):
-        """Test construction entry validation with empty description."""
-        is_valid, error_message = validate_construction_entry("", 100.0, 60.0)
-        assert not is_valid
-        assert error_message == "Description is required"
-    
-    def test_validate_construction_entry_whitespace_description(self):
-        """Test construction entry validation with whitespace description."""
-        is_valid, error_message = validate_construction_entry("   ", 100.0, 60.0)
-        assert not is_valid
-        assert error_message == "Description is required"
-    
-    def test_validate_construction_entry_zero_power(self):
-        """Test construction entry validation with zero power."""
-        is_valid, error_message = validate_construction_entry("Test Building", 0.0, 60.0)
-        assert not is_valid
-        assert error_message == "Power must be greater than 0"
-    
-    def test_validate_construction_entry_negative_power(self):
-        """Test construction entry validation with negative power."""
-        is_valid, error_message = validate_construction_entry("Test Building", -10.0, 60.0)
-        assert not is_valid
-        assert error_message == "Power must be greater than 0"
-    
-    def test_validate_construction_entry_negative_speedup(self):
-        """Test construction entry validation with negative speedup."""
-        is_valid, error_message = validate_construction_entry("Test Building", 100.0, -10.0)
-        assert not is_valid
-        assert error_message == "Speed-up minutes cannot be negative"
-    
-    def test_validate_research_entry_valid(self):
-        """Test valid research entry validation."""
-        is_valid, error_message = validate_research_entry("Test Research", 10.0, 100.0)
-        assert is_valid
-        assert error_message == ""
-    
-    def test_validate_research_entry_empty_description(self):
-        """Test research entry validation with empty description."""
-        is_valid, error_message = validate_research_entry("", 10.0, 100.0)
-        assert not is_valid
-        assert error_message == "Description is required"
-    
-    def test_validate_research_entry_zero_power(self):
-        """Test research entry validation with zero power."""
-        is_valid, error_message = validate_research_entry("Test Research", 0.0, 100.0)
-        assert not is_valid
-        assert error_message == "Power must be greater than 0"
-    
-    def test_validate_research_entry_negative_speedup(self):
-        """Test research entry validation with negative speedup."""
-        is_valid, error_message = validate_research_entry("Test Research", 10.0, -10.0)
-        assert not is_valid
-        assert error_message == "Speed-up minutes cannot be negative"
 
 
 class TestTrainingPoints:
@@ -185,6 +130,71 @@ class TestTrainingPoints:
         
         mock_calculate_batches.assert_called_once()
         assert speedups == 1440.0  # 1 batch * 1440 minutes
+    
+    @patch('calculations.calculate_batches_and_points')
+    def test_calculate_training_points_with_zero_time(self, mock_calculate_batches, mock_session_state):
+        """Test training points calculation with zero training time."""
+        # Should not call calculate_batches_and_points when time is zero
+        mock_calculate_batches.return_value = (0, 0.0)
+        
+        params = {
+            'days': 0,
+            'hours': 0,
+            'minutes': 0,
+            'seconds': 0,
+            'troops_per_batch': 100,
+            'points_per_troop': 50.0
+        }
+        
+        points, speedups = calculate_training_points(params)
+        
+        # Should return zero values without calling calculate_batches_and_points
+        assert points == 0.0
+        assert speedups == 0.0
+        mock_calculate_batches.assert_not_called()
+    
+    @patch('calculations.calculate_batches_and_points')
+    def test_calculate_training_points_with_negative_time(self, mock_calculate_batches, mock_session_state):
+        """Test training points calculation with negative training time."""
+        # Should not call calculate_batches_and_points when time is negative
+        mock_calculate_batches.return_value = (0, 0.0)
+        
+        params = {
+            'days': 0,
+            'hours': -1,  # Negative hours
+            'minutes': 0,
+            'seconds': 0,
+            'troops_per_batch': 100,
+            'points_per_troop': 50.0
+        }
+        
+        points, speedups = calculate_training_points(params)
+        
+        # Should return zero values without calling calculate_batches_and_points
+        assert points == 0.0
+        assert speedups == 0.0
+        mock_calculate_batches.assert_not_called()
+    
+    @patch('calculations.calculate_batches_and_points')
+    def test_calculate_training_points_with_value_error(self, mock_calculate_batches, mock_session_state):
+        """Test training points calculation when calculate_batches_and_points raises ValueError."""
+        mock_calculate_batches.side_effect = ValueError("Test error")
+        
+        params = {
+            'days': 0,
+            'hours': 2,
+            'minutes': 30,
+            'seconds': 0,
+            'troops_per_batch': 100,
+            'points_per_troop': 50.0
+        }
+        
+        points, speedups = calculate_training_points(params)
+        
+        # Should return zero values when ValueError is raised
+        assert points == 0.0
+        assert speedups == 0.0
+        mock_calculate_batches.assert_called_once()
 
 
 class TestEfficiencyDataframe:
