@@ -60,8 +60,12 @@ def calculate_training_points(params: Dict[str, Any]) -> Tuple[float, float]:
         Tuple[float, float]: Total points and total speedup minutes
     """
     from calculations import calculate_batches_and_points
+    from features.speedup_inventory import get_speedup_inventory, get_total_speedups_for_category
     
-    total_speedups = params['general_speedups'] + params['training_speedups']
+    # Get speed-up inventory and calculate total training speed-ups
+    inventory = get_speedup_inventory()
+    total_speedups = get_total_speedups_for_category('training', inventory)
+    
     points_per_batch = params['troops_per_batch'] * params['points_per_troop']
     
     # Calculate base training time from individual components

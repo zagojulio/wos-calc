@@ -1,4 +1,29 @@
 # Changelog
+## [Unreleased]
+
+### Added
+- FEAT: Implemented Speed-up Minutes Inventory system with centralized speed-up management:
+  - New sidebar section "Speed-up Minutes Inventory" with inputs for four categories: General, Construction, Training, and Research
+  - General speed-ups usable for any category, category-specific speed-ups for their respective activities
+  - Speed-up allocation logic: uses category-specific speed-ups first, then general speed-ups
+  - Session state persistence for all speed-up inventory values
+  - Enhanced training analysis with speed-up allocation breakdown display
+- FEAT: Implemented Pack Contents Summary feature in Pack Purchases tab. Aggregates all pack rewards, converts speed-ups to total minutes, and displays a sortable, searchable summary table with a summary row. Includes error handling and is fully reactive to data changes.
+- FEAT: Implemented Pack Value Comparison tab. Allows adding/removing packs with price and speed-up minutes, calculates cost per minute, displays a sortable and persistent table, includes export to CSV, confirmation modals, and user feedback messages.
+
+### Changed
+- REFACTOR: Removed speed-up inputs from Training Parameters section to centralize all speed-up management in the new Speed-up Minutes Inventory
+- REFACTOR: Updated training calculations to use the new speed-up inventory system with proper category allocation
+- REFACTOR: Updated Hall of Chiefs calculations to use the new speed-up inventory system
+- REFACTOR: Updated session state structure to separate training parameters from speed-up inventory
+
+### Fixed
+
+### Tested
+- Added comprehensive unit tests for speed-up inventory functionality
+- Added integration tests for speed-up allocation logic and training calculations
+- Updated existing tests to work with new session state structure
+- All tests passing with proper speed-up category allocation and calculation logic
 
 ## [v0.2.2] - 2025-06-15
 
@@ -8,17 +33,6 @@
   - Display updates reactively with parameter changes.
   - Metric formatted with thousands separators for readability.
 - Removed redundant "Batches to Target" metric to simplify UI.
-
-## [Unreleased]
-
-### Added
-- FEAT: Implemented Pack Contents Summary feature in Pack Purchases tab. Aggregates all pack rewards, converts speed-ups to total minutes, and displays a sortable, searchable summary table with a summary row. Includes error handling and is fully reactive to data changes.
-
-### Changed
-
-### Fixed
-
-### Tested
 
 ## [v0.2.1] - 2025-06-15
 

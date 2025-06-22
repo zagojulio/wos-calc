@@ -9,29 +9,11 @@ from calculations import (
     calculate_efficiency_metrics
 )
 from utils.session_manager import get_training_params, update_training_params
+from features.speedup_inventory import get_speedup_inventory, get_total_speedups_for_category
 
 def render_training_sidebar():
     """Render training parameters in the sidebar."""
     with st.sidebar.expander("Training Parameters", expanded=True):
-        st.subheader("Speed-up Minutes")
-        general_speedups = st.number_input(
-            "General Speed-ups",
-            min_value=0.0,
-            value=get_training_params().get('general_speedups', 18000.0),
-            step=100.0,
-            help="General purpose speed-up minutes available",
-            key="general_speedups"
-        )
-        training_speedups = st.number_input(
-            "Troop Training Speed-ups",
-            min_value=0.0,
-            value=get_training_params().get('training_speedups', 1515.0),
-            step=100.0,
-            help="Speed-up minutes specifically for troop training",
-            key="training_speedups"
-        )
-        total_speedups = general_speedups + training_speedups
-
         st.subheader("Base Training Time")
         col1, col2 = st.columns(2)
         with col1:
@@ -89,8 +71,6 @@ def render_training_sidebar():
 
         # Update session state with new values
         update_training_params({
-            'general_speedups': general_speedups,
-            'training_speedups': training_speedups,
             'days': days,
             'hours': hours,
             'minutes': minutes,
@@ -100,8 +80,6 @@ def render_training_sidebar():
         })
 
         return {
-            'general_speedups': general_speedups,
-            'training_speedups': training_speedups,
             'base_training_time': base_training_time,
             'troops_per_batch': troops_per_batch,
             'points_per_troop': points_per_troop
@@ -109,10 +87,12 @@ def render_training_sidebar():
 
 def render_training_analysis(params):
     """Render training analysis results."""
+    # Get speed-up inventory
+    inventory = get_speedup_inventory()
+    total_training_speedups = get_total_speedups_for_category('training', inventory)
+    
     # Validate input parameters
-    if params['general_speedups'] < 0:
-        raise ValueError("General speedups cannot be negative")
-    if params['training_speedups'] < 0:
+    if total_training_speedups < 0:
         raise ValueError("Training speedups cannot be negative")
     if params['base_training_time'] < 0:
         raise ValueError("Base training time cannot be negative")
@@ -123,12 +103,11 @@ def render_training_analysis(params):
 
     # Calculate initial values
     points_per_batch = params['troops_per_batch'] * params['points_per_troop']
-    total_speedups = params['general_speedups'] + params['training_speedups']
     current_points = 0.0
 
     # Calculate batches and points
     batches, total_points = calculate_batches_and_points(
-        total_speedups,
+        total_training_speedups,
         params['base_training_time'],
         points_per_batch,
         current_points
@@ -136,12 +115,12 @@ def render_training_analysis(params):
 
     # Calculate efficiency metrics
     efficiency = calculate_efficiency_metrics(
-        total_speedups,
+        total_training_speedups,
         total_points
     )
 
     # Calculate remaining speedups
-    remaining_speedups = total_speedups - (batches * params['base_training_time'])
+    remaining_speedups = total_training_speedups - (batches * params['base_training_time'])
 
     # Display results with improved layout
     st.subheader("Training Analysis Results")
@@ -186,4 +165,55 @@ def render_training_analysis(params):
             "Speed-ups Remaining", 
             f"{remaining_speedups:,.0f}",
             help="Speed-up minutes left after training all possible batches"
+        )
+    
+    # Third row - Speed-up breakdown
+    st.subheader("Speed-up Allocation")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(
+            "General Speed-ups Available",
+            f"{inventory.get('general', 0.0):,.0f}",
+            help="General purpose speed-ups available"
+        )
+    with col2:
+        st.metric(
+            "Training Speed-ups Available",
+            f"{inventory.get('training', 0.0):,.0f}",
+            help="Training-specific speed-ups available"
+        )
+    with col3:
+        st.metric(
+            "Total Training Speed-ups",
+            f"{total_training_speedups:,.0f}",
+            help="Total speed-ups available for training (general + training)"
+        )
+    with col4:
+        st.metric(
+            "Speed-ups Used",
+            f"{batches * params['base_training_time']:,.0f}",
+            help="Speed-ups used for training"
+        )
+    
+    # Efficiency metrics
+    st.subheader("Efficiency Metrics")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric(
+            "Points per Minute",
+            f"{efficiency['points_per_minute']:.2f}",
+            help="Points earned per speed-up minute used"
+        )
+    with col2:
+        st.metric(
+            "Minutes per Point",
+            f"{efficiency['time_per_point']:.2f}",
+            help="Speed-up minutes needed per point earned"
+        )
+    with col3:
+        st.metric(
+            "Efficiency Score",
+            f"{efficiency['efficiency_score']:.0f}",
+            help="Normalized efficiency score (higher is better)"
         ) 

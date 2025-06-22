@@ -16,14 +16,21 @@ def init_session_state():
 
     if 'training_params' not in st.session_state:
         st.session_state.training_params = {
-            'general_speedups': 18000.0,
-            'training_speedups': 1515.0,
             'days': 0,
             'hours': 4,
             'minutes': 50,
             'seconds': 0,
             'troops_per_batch': 426,
             'points_per_troop': 830.0
+        }
+
+    # Initialize speed-up inventory
+    if 'speedup_inventory' not in st.session_state:
+        st.session_state.speedup_inventory = {
+            'general': 18000.0,
+            'construction': 0.0,
+            'training': 1515.0,
+            'research': 0.0
         }
 
     # Initialize Hall of Chiefs session state
@@ -40,6 +47,14 @@ def update_training_params(params: Dict[str, Any]):
 def get_training_params() -> Dict[str, Any]:
     """Get current training parameters from session state."""
     return st.session_state.training_params
+
+def update_speedup_inventory(inventory: Dict[str, float]):
+    """Update speed-up inventory in session state."""
+    st.session_state.speedup_inventory.update(inventory)
+
+def get_speedup_inventory() -> Dict[str, float]:
+    """Get current speed-up inventory from session state."""
+    return st.session_state.speedup_inventory
 
 def update_purchases(auto_purchases=None, manual_purchases=None):
     """Update purchase data in session state."""

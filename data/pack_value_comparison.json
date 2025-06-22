@@ -8,7 +8,11 @@
     "Cost per Minute": 0.0172
   },
   {
+<<<<<<< HEAD
     "Pack Name": "Dawn market",
+=======
+    "Pack Name": "Dawn market speedup",
+>>>>>>> 60e536d ([WIP] Hall of Chiefs: segregate config sections)
     "Price": 619.9,
     "60min Speedups": 360,
     "5min Speedups": 2880,

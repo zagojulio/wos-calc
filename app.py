@@ -7,6 +7,7 @@ import streamlit as st
 from features.ui_manager import setup_page_config, apply_custom_styling, render_header
 from features.training_manager import render_training_sidebar, render_training_analysis
 from features.purchase_manager import render_purchase_tab
+from features.speedup_inventory import render_speedup_inventory_sidebar
 from utils.session_manager import init_session_state
 
 def main():
@@ -17,6 +18,9 @@ def main():
 
     # Initialize session state
     init_session_state()
+
+    # Render speed-up inventory sidebar (available on all tabs)
+    render_speedup_inventory_sidebar()
 
     # Main tabs navigation
     tab1, tab2, tab3, tab4 = st.tabs(["Training Analysis", "Pack Purchases", "Pack Value Comparison", "Hall of Chiefs"])

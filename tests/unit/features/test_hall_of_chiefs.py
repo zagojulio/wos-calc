@@ -68,13 +68,11 @@ class TestTrainingPoints:
     """Test training points calculations."""
     
     @patch('calculations.calculate_batches_and_points')
-    def test_calculate_training_points_basic(self, mock_calculate_batches):
+    def test_calculate_training_points_basic(self, mock_calculate_batches, mock_session_state):
         """Test basic training points calculation."""
         mock_calculate_batches.return_value = (5, 10000.0)
         
         params = {
-            'general_speedups': 1000.0,
-            'training_speedups': 500.0,
             'days': 0,
             'hours': 2,
             'minutes': 30,
@@ -87,7 +85,7 @@ class TestTrainingPoints:
         
         # Base training time = (0*24*60) + (2*60) + 30 + (0/60) = 150 minutes
         expected_base_time = 150.0
-        expected_total_speedups = 1500.0
+        expected_total_speedups = mock_session_state.speedup_inventory['general'] + mock_session_state.speedup_inventory['training']
         expected_points_per_batch = 5000.0
         
         mock_calculate_batches.assert_called_once_with(
@@ -101,13 +99,11 @@ class TestTrainingPoints:
         assert speedups == 750.0  # 5 batches * 150 minutes
     
     @patch('calculations.calculate_batches_and_points')
-    def test_calculate_training_points_with_days(self, mock_calculate_batches):
+    def test_calculate_training_points_with_days(self, mock_calculate_batches, mock_session_state):
         """Test training points calculation with days included."""
         mock_calculate_batches.return_value = (1, 2000.0)
         
         params = {
-            'general_speedups': 2000.0,
-            'training_speedups': 0.0,
             'days': 1,
             'hours': 0,
             'minutes': 0,
@@ -190,8 +186,10 @@ class TestEfficiencyDataframe:
         
         training_params = {
             'troops_per_batch': 100,
-            'general_speedups': 1000.0,
-            'training_speedups': 500.0
+            'days': 0,
+            'hours': 1,
+            'minutes': 0,
+            'seconds': 0
         }
         
         df = create_efficiency_dataframe([], [], training_params)
