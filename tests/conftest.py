@@ -52,15 +52,19 @@ def mock_session_state():
         def __init__(self):
             self._state = {}
             self.training_params = {
-                'general_speedups': 18000.0,
-                'training_speedups': 1515.0,
                 'days': 0,
-                'hours': 4,
-                'minutes': 50,
+                'hours': 4,  # Safe default: 4 hours
+                'minutes': 50,  # Safe default: 50 minutes
                 'seconds': 0,
-                'base_training_time': 290.0,
-                'troops_per_batch': 426,
-                'points_per_troop': 830.0
+                'base_training_time': 290.0,  # 4h 50m in minutes
+                'troops_per_batch': 426,  # Safe default: 426 troops
+                'points_per_troop': 830.0  # Safe default: 830 points per troop
+            }
+            self.speedup_inventory = {
+                'general': 18000.0,  # Safe default: 18k general speedups
+                'construction': 0.0,
+                'training': 1515.0,  # Safe default: 1515 training speedups
+                'research': 0.0
             }
         
         def __getitem__(self, key):
