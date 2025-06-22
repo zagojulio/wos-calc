@@ -1,6 +1,8 @@
 # Changelog
 ## [Unreleased]
 
+## [v0.4.0] - 2025-06-22
+
 ### Added
 - FEAT: Improved sidebar persistence and behavior for Research and Construction entries:
   - Added explicit "Add Entry" buttons for Research and Construction sections in sidebar
@@ -22,14 +24,32 @@
   - Updated Remove button styling to web-friendly red color (#DC3545)
   - Improved session state persistence for all sidebar sections
   - Enhanced UI with category-specific metrics and better data organization
+  - Added data editor for inline editing of entries
+  - Added export functionality for efficiency data
 - FEAT: Implemented Speed-up Minutes Inventory system with centralized speed-up management:
   - New sidebar section "Speed-up Minutes Inventory" with inputs for four categories: General, Construction, Training, and Research
   - General speed-ups usable for any category, category-specific speed-ups for their respective activities
   - Speed-up allocation logic: uses category-specific speed-ups first, then general speed-ups
   - Session state persistence for all speed-up inventory values
   - Enhanced training analysis with speed-up allocation breakdown display
-- FEAT: Implemented Pack Contents Summary feature in Pack Purchases tab. Aggregates all pack rewards, converts speed-ups to total minutes, and displays a sortable, searchable summary table with a summary row. Includes error handling for missing data and maintains consistent styling.
-- FEAT: Implemented Pack Value Comparison tab. Allows adding/removing packs with price and speed-up minutes, calculates cost per minute, displays a sortable and persistent table, includes export to CSV, confirmation modals, and user feedback messages.
+  - JSON file persistence for speed-up inventory data
+- FEAT: Implemented Pack Value Comparison tab:
+  - Add, compare, and export pack purchase data
+  - Calculate cost per speed-up minute from 60min and 5min speedups
+  - Sortable, persistent history table with inline editing
+  - Remove individual or all entries with confirmation dialogs
+  - Export to CSV functionality
+  - Input validation and user feedback messages
+  - JSON file persistence for pack comparison data
+- FEAT: Enhanced Pack Purchases tab with comprehensive functionality:
+  - Manual purchase entry with CSV persistence
+  - Automatic purchase history loading from CSV file
+  - Combined purchase statistics: total spent, average daily spending, daily spending bar chart
+  - Date range filtering for purchase tables and statistics
+  - Export combined purchase history to CSV
+  - Row-level delete functionality for manual purchases with confirmation
+  - Speed-up tracking integration
+  - Improved UI consistency and error handling
 
 ### Changed
 - REFACTOR: Updated research points calculation to use direct power input instead of speedup-based estimation
@@ -39,8 +59,17 @@
 - REFACTOR: Updated training calculations to use the new speed-up inventory system with proper category allocation
 - REFACTOR: Updated Hall of Chiefs calculations to use the new speed-up inventory system
 - REFACTOR: Updated session state structure to separate training parameters from speed-up inventory
+- REFACTOR: Improved app architecture with three main tabs: Pack Purchases, Pack Value Comparison, and Hall of Chiefs
+- REFACTOR: Enhanced data persistence with JSON files for speed-up inventory and pack comparison data
 
 ### Fixed
+- FIX: Resolved session state persistence issues across tab switches
+- FIX: Improved error handling for invalid training time inputs
+- FIX: Enhanced data validation for all input fields
+- FIX: Fixed CSV file operation safety improvements
+- FIX: Resolved purchase deletion confirmation handling
+- FIX: Improved input validation edge cases
+- FIX: Enhanced data persistence reliability
 
 ### Tested
 - Added comprehensive unit tests for speed-up inventory functionality
@@ -49,6 +78,8 @@
 - All tests passing with proper speed-up category allocation and calculation logic
 - Comprehensive unit and integration tests added for new modules
 - Improved error handling and type hints in modular components
+- Current test coverage: 72% (below 80% target - needs improvement)
+- All critical paths verified and tested
 
 ## [v0.2.2] - 2025-06-15
 
