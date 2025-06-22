@@ -43,25 +43,25 @@ class TestResearchPoints:
     
     def test_calculate_research_points_basic(self):
         """Test basic research points calculation."""
-        points = calculate_research_points("Test Research", 100.0, 30)
-        # Estimated power = 100/10 = 10, points = 10 * 30 = 300
+        points = calculate_research_points(10.0, 30)
+        # Points = 10 * 30 = 300
         assert points == 300.0
     
     def test_calculate_research_points_45_points(self):
         """Test research points with 45 points per power."""
-        points = calculate_research_points("Test Research", 50.0, 45)
-        # Estimated power = 50/10 = 5, points = 5 * 45 = 225
+        points = calculate_research_points(5.0, 45)
+        # Points = 5 * 45 = 225
         assert points == 225.0
     
-    def test_calculate_research_points_zero_speedup(self):
-        """Test research points with zero speedup minutes."""
-        points = calculate_research_points("Test Research", 0.0, 30)
+    def test_calculate_research_points_zero_power(self):
+        """Test research points with zero power."""
+        points = calculate_research_points(0.0, 30)
         assert points == 0.0
     
-    def test_calculate_research_points_empty_description(self):
-        """Test research points with empty description."""
-        points = calculate_research_points("", 100.0, 30)
-        assert points == 300.0
+    def test_calculate_research_points_negative_power(self):
+        """Test research points with negative power."""
+        points = calculate_research_points(-5.0, 30)
+        assert points == -150.0
 
 
 class TestTrainingPoints:
@@ -133,31 +133,33 @@ class TestEfficiencyDataframe:
             # For empty DataFrames, we need to check if columns exist when data is added
             # Let's test with minimal data to verify column structure
             test_df = create_efficiency_dataframe(
-                [{'power': 0.0, 'speedup_minutes': 0.0, 'points_per_power': 30}], 
+                [{'description': '', 'power': 0.0, 'speedup_minutes': 0.0, 'points_per_power': 30}], 
                 [], 
                 {}
             )
             assert list(test_df.columns) == [
-                'Activity Type', 'Description', 'Total Points', 
+                'Activity Type', 'Description', 'Power', 'Total Points', 
                 'Speed-up Minutes', 'Efficiency (Points/Min)'
             ]
         else:
             assert list(df.columns) == [
-                'Activity Type', 'Description', 'Total Points', 
+                'Activity Type', 'Description', 'Power', 'Total Points', 
                 'Speed-up Minutes', 'Efficiency (Points/Min)'
             ]
     
     def test_create_efficiency_dataframe_construction_only(self):
         """Test creating DataFrame with construction entries only."""
         construction_entries = [
-            {'power': 100.0, 'speedup_minutes': 60.0, 'points_per_power': 30},
-            {'power': 50.0, 'speedup_minutes': 30.0, 'points_per_power': 45}
+            {'description': 'Test Construction', 'power': 100.0, 'speedup_minutes': 60.0, 'points_per_power': 30},
+            {'description': '', 'power': 50.0, 'speedup_minutes': 30.0, 'points_per_power': 45}
         ]
         
         df = create_efficiency_dataframe(construction_entries, [], {})
         
         assert len(df) == 2
         assert df.iloc[0]['Activity Type'] == 'Construction'
+        assert df.iloc[0]['Description'] == 'Test Construction'
+        assert df.iloc[0]['Power'] == 100.0
         assert df.iloc[0]['Total Points'] == 3000.0  # 100 * 30
         assert df.iloc[0]['Efficiency (Points/Min)'] == 50.0  # 3000 / 60
         assert df.iloc[1]['Total Points'] == 2250.0  # 50 * 45
@@ -166,8 +168,8 @@ class TestEfficiencyDataframe:
     def test_create_efficiency_dataframe_research_only(self):
         """Test creating DataFrame with research entries only."""
         research_entries = [
-            {'description': 'Research 1', 'speedup_minutes': 100.0, 'points_per_power': 30},
-            {'description': '', 'speedup_minutes': 50.0, 'points_per_power': 45}
+            {'description': 'Research 1', 'power': 10.0, 'speedup_minutes': 100.0, 'points_per_power': 30},
+            {'description': '', 'power': 5.0, 'speedup_minutes': 50.0, 'points_per_power': 45}
         ]
         
         df = create_efficiency_dataframe([], research_entries, {})
@@ -175,9 +177,12 @@ class TestEfficiencyDataframe:
         assert len(df) == 2
         assert df.iloc[0]['Activity Type'] == 'Research'
         assert df.iloc[0]['Description'] == 'Research 1'
-        assert df.iloc[0]['Total Points'] == 300.0  # (100/10) * 30
+        assert df.iloc[0]['Power'] == 10.0
+        assert df.iloc[0]['Total Points'] == 300.0  # 10 * 30
         assert df.iloc[0]['Efficiency (Points/Min)'] == 3.0  # 300 / 100
         assert df.iloc[1]['Description'] == 'Research 2'  # Default name for empty description
+        assert df.iloc[1]['Power'] == 5.0
+        assert df.iloc[1]['Total Points'] == 225.0  # 5 * 45
     
     @patch('features.hall_of_chiefs.calculate_training_points')
     def test_create_efficiency_dataframe_training_only(self, mock_calculate_training):
@@ -203,10 +208,10 @@ class TestEfficiencyDataframe:
     def test_create_efficiency_dataframe_all_activities(self):
         """Test creating DataFrame with all activity types."""
         construction_entries = [
-            {'power': 100.0, 'speedup_minutes': 60.0, 'points_per_power': 30}
+            {'description': 'Test Construction', 'power': 100.0, 'speedup_minutes': 60.0, 'points_per_power': 30}
         ]
         research_entries = [
-            {'description': 'Research 1', 'speedup_minutes': 100.0, 'points_per_power': 30}
+            {'description': 'Research 1', 'power': 10.0, 'speedup_minutes': 100.0, 'points_per_power': 30}
         ]
         
         with patch('features.hall_of_chiefs.calculate_training_points') as mock_calculate_training:
@@ -225,7 +230,7 @@ class TestEfficiencyDataframe:
     def test_create_efficiency_dataframe_zero_speedup_handling(self):
         """Test handling of zero speedup minutes."""
         construction_entries = [
-            {'power': 100.0, 'speedup_minutes': 0.0, 'points_per_power': 30}
+            {'description': '', 'power': 100.0, 'speedup_minutes': 0.0, 'points_per_power': 30}
         ]
         
         df = create_efficiency_dataframe(construction_entries, [], {})

@@ -1,17 +1,16 @@
 """
-Hall of Chiefs Points Efficiency Tab for Whiteout Survival Calculator
-Allows users to input and compare points gained from Construction, Research, and Training activities.
+Hall of Chiefs Points Efficiency Module
+Handles comparison of points gained from different activities.
 """
 
 import streamlit as st
 import pandas as pd
-from typing import List, Dict, Any, Tuple
-from calculations import calculate_efficiency_metrics
+from typing import Dict, List, Any, Tuple
 from utils.session_manager import get_training_params
 
-# --- Session State Keys ---
-CONSTRUCTION_ENTRIES_KEY = "hall_of_chiefs_construction_entries"
-RESEARCH_ENTRIES_KEY = "hall_of_chiefs_research_entries"
+# Session state keys
+CONSTRUCTION_ENTRIES_KEY = 'hall_of_chiefs_construction_entries'
+RESEARCH_ENTRIES_KEY = 'hall_of_chiefs_research_entries'
 
 def init_hall_of_chiefs_session_state():
     """Initialize session state for Hall of Chiefs tab."""
@@ -33,21 +32,18 @@ def calculate_construction_points(power: float, points_per_power: int) -> float:
     """
     return power * points_per_power
 
-def calculate_research_points(description: str, speedup_minutes: float, points_per_power: int) -> float:
+def calculate_research_points(power: float, points_per_power: int) -> float:
     """
     Calculate points for research activity.
     
     Args:
-        description (str): Research description
-        speedup_minutes (float): Speed-up minutes used
+        power (float): Power value
         points_per_power (int): Points per power (30 or 45)
     
     Returns:
-        float: Total points earned (estimated based on time)
+        float: Total points earned
     """
-    # Estimate power based on speedup minutes (rough approximation)
-    estimated_power = speedup_minutes / 10  # Rough estimate: 10 minutes per power
-    return estimated_power * points_per_power
+    return power * points_per_power
 
 def calculate_training_points(params: Dict[str, Any]) -> Tuple[float, float]:
     """
@@ -91,6 +87,7 @@ def render_construction_sidebar() -> List[Dict[str, Any]]:
         # Add new entry button
         if st.button("Add Construction Entry", key="add_construction"):
             entries.append({
+                'description': '',
                 'power': 0.0,
                 'speedup_minutes': 0.0,
                 'points_per_power': 30
@@ -102,8 +99,16 @@ def render_construction_sidebar() -> List[Dict[str, Any]]:
         for i, entry in enumerate(entries):
             with st.container():
                 st.write(f"**Entry {i + 1}**")
-                col1, col2 = st.columns(2)
                 
+                # Description field
+                description = st.text_input(
+                    "Description",
+                    value=entry.get('description', ''),
+                    key=f"construction_description_{i}",
+                    help="Optional description for this construction entry"
+                )
+                
+                col1, col2 = st.columns(2)
                 with col1:
                     power = st.number_input(
                         "Power",
@@ -128,13 +133,19 @@ def render_construction_sidebar() -> List[Dict[str, Any]]:
                         key=f"construction_points_per_power_{i}"
                     )
                     
-                    if st.button("Remove", key=f"remove_construction_{i}"):
+                    # Red Remove button
+                    if st.button(
+                        "Remove", 
+                        key=f"remove_construction_{i}",
+                        help="Remove this construction entry"
+                    ):
                         entries.pop(i)
                         st.session_state[CONSTRUCTION_ENTRIES_KEY] = entries
                         st.experimental_rerun()
                 
                 # Update entry
                 entry.update({
+                    'description': description,
                     'power': power,
                     'speedup_minutes': speedup_minutes,
                     'points_per_power': points_per_power
@@ -153,6 +164,7 @@ def render_research_sidebar() -> List[Dict[str, Any]]:
         if st.button("Add Research Entry", key="add_research"):
             entries.append({
                 'description': '',
+                'power': 0.0,
                 'speedup_minutes': 0.0,
                 'points_per_power': 30
             })
@@ -172,6 +184,13 @@ def render_research_sidebar() -> List[Dict[str, Any]]:
                 
                 col1, col2 = st.columns(2)
                 with col1:
+                    power = st.number_input(
+                        "Power",
+                        min_value=0.0,
+                        value=entry.get('power', 0.0),
+                        step=1.0,
+                        key=f"research_power_{i}"
+                    )
                     speedup_minutes = st.number_input(
                         "Speed-up Minutes",
                         min_value=0.0,
@@ -188,7 +207,12 @@ def render_research_sidebar() -> List[Dict[str, Any]]:
                         key=f"research_points_per_power_{i}"
                     )
                     
-                    if st.button("Remove", key=f"remove_research_{i}"):
+                    # Red Remove button
+                    if st.button(
+                        "Remove", 
+                        key=f"remove_research_{i}",
+                        help="Remove this research entry"
+                    ):
                         entries.pop(i)
                         st.session_state[RESEARCH_ENTRIES_KEY] = entries
                         st.experimental_rerun()
@@ -196,6 +220,7 @@ def render_research_sidebar() -> List[Dict[str, Any]]:
                 # Update entry
                 entry.update({
                     'description': description,
+                    'power': power,
                     'speedup_minutes': speedup_minutes,
                     'points_per_power': points_per_power
                 })
@@ -227,7 +252,8 @@ def create_efficiency_dataframe(
         
         data.append({
             'Activity Type': 'Construction',
-            'Description': f"Power: {entry['power']:.0f}",
+            'Description': entry.get('description', f"Power: {entry['power']:.0f}"),
+            'Power': entry['power'],
             'Total Points': points,
             'Speed-up Minutes': entry['speedup_minutes'],
             'Efficiency (Points/Min)': efficiency
@@ -235,12 +261,13 @@ def create_efficiency_dataframe(
     
     # Add research entries
     for i, entry in enumerate(research_entries):
-        points = calculate_research_points(entry['description'], entry['speedup_minutes'], entry['points_per_power'])
+        points = calculate_research_points(entry.get('power', 0.0), entry['points_per_power'])
         efficiency = points / entry['speedup_minutes'] if entry['speedup_minutes'] > 0 else 0.0
         
         data.append({
             'Activity Type': 'Research',
             'Description': entry['description'] or f"Research {i + 1}",
+            'Power': entry.get('power', 0.0),
             'Total Points': points,
             'Speed-up Minutes': entry['speedup_minutes'],
             'Efficiency (Points/Min)': efficiency
@@ -254,12 +281,62 @@ def create_efficiency_dataframe(
         data.append({
             'Activity Type': 'Training',
             'Description': f"Troops: {training_params['troops_per_batch']} per batch",
+            'Power': 0.0,  # Training doesn't use power
             'Total Points': training_points,
             'Speed-up Minutes': training_speedups,
             'Efficiency (Points/Min)': efficiency
         })
     
     return pd.DataFrame(data)
+
+def create_category_dataframes(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
+    """
+    Split the main DataFrame into category-specific DataFrames.
+    
+    Args:
+        df (pd.DataFrame): Main efficiency DataFrame
+    
+    Returns:
+        Dict[str, pd.DataFrame]: Dictionary of category-specific DataFrames
+    """
+    if df.empty:
+        return {
+            'Construction': pd.DataFrame(),
+            'Research': pd.DataFrame(),
+            'Training': pd.DataFrame()
+        }
+    
+    return {
+        'Construction': df[df['Activity Type'] == 'Construction'].copy(),
+        'Research': df[df['Activity Type'] == 'Research'].copy(),
+        'Training': df[df['Activity Type'] == 'Training'].copy()
+    }
+
+def calculate_category_summary(df: pd.DataFrame, category: str) -> Dict[str, Any]:
+    """
+    Calculate summary metrics for a specific category.
+    
+    Args:
+        df (pd.DataFrame): Category-specific DataFrame
+        category (str): Category name
+    
+    Returns:
+        Dict[str, Any]: Summary metrics for the category
+    """
+    if df.empty:
+        return {
+            'avg_efficiency': 0.0,
+            'total_points': 0.0,
+            'total_speedups': 0.0,
+            'entry_count': 0
+        }
+    
+    return {
+        'avg_efficiency': df['Efficiency (Points/Min)'].mean(),
+        'total_points': df['Total Points'].sum(),
+        'total_speedups': df['Speed-up Minutes'].sum(),
+        'entry_count': len(df)
+    }
 
 def calculate_summary_metrics(df: pd.DataFrame) -> Dict[str, Any]:
     """
@@ -300,6 +377,11 @@ def calculate_summary_metrics(df: pd.DataFrame) -> Dict[str, Any]:
         'overall_total_speedups': overall_total_speedups
     }
 
+def clear_all_entries():
+    """Clear all entries from all categories."""
+    st.session_state[CONSTRUCTION_ENTRIES_KEY] = []
+    st.session_state[RESEARCH_ENTRIES_KEY] = []
+
 def render_hall_of_chiefs_tab():
     """Render the Hall of Chiefs Points Efficiency tab."""
     st.header("Hall of Chiefs Points Efficiency")
@@ -321,98 +403,109 @@ def render_hall_of_chiefs_tab():
     # Calculate summary metrics
     summary = calculate_summary_metrics(df)
     
-    # Display summary metrics
+    # Remove All Entries button
     if not df.empty:
-        st.subheader("Summary Metrics")
-        
-        col1, col2, col3 = st.columns(3)
+        st.subheader("Manage Entries")
+        col1, col2 = st.columns([1, 3])
         with col1:
-            st.metric(
-                "Research Avg Efficiency",
-                f"{summary['research_avg_efficiency']:.2f} pts/min",
-                help="Average efficiency for all research entries"
-            )
+            if st.button(
+                "🗑️ Remove All Entries",
+                type="primary",
+                help="Clear all entries from all categories"
+            ):
+                # Show confirmation dialog
+                st.warning("Are you sure you want to remove all entries?")
+                col_confirm1, col_confirm2 = st.columns(2)
+                with col_confirm1:
+                    if st.button("Yes, Remove All"):
+                        clear_all_entries()
+                        st.success("All entries have been removed.")
+                        st.experimental_rerun()
+                with col_confirm2:
+                    if st.button("Cancel"):
+                        st.info("Operation cancelled.")
         with col2:
-            st.metric(
-                "Overall Total Points",
-                f"{summary['overall_total_points']:,.0f}",
-                help="Total points across all activities"
-            )
-        with col3:
-            st.metric(
-                "Overall Total Speed-ups",
-                f"{summary['overall_total_speedups']:,.0f} min",
-                help="Total speed-up minutes across all activities"
-            )
+            st.write("⚠️ This action cannot be undone.")
+    
+    # Display overall summary table
+    if not df.empty:
+        st.subheader("Overall Summary")
         
-        # Activity type breakdown
-        st.subheader("Activity Breakdown")
+        # Create summary table
+        summary_data = []
         for activity_type in ['Construction', 'Research', 'Training']:
             if activity_type in summary['total_points_by_type']:
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric(
-                        f"{activity_type} Total Points",
-                        f"{summary['total_points_by_type'][activity_type]:,.0f}"
-                    )
-                with col2:
-                    st.metric(
-                        f"{activity_type} Total Speed-ups",
-                        f"{summary['total_speedups_by_type'][activity_type]:,.0f} min"
-                    )
-                with col3:
-                    efficiency = (summary['total_points_by_type'][activity_type] / 
-                                summary['total_speedups_by_type'][activity_type] 
-                                if summary['total_speedups_by_type'][activity_type] > 0 else 0.0)
-                    st.metric(
-                        f"{activity_type} Efficiency",
-                        f"{efficiency:.2f} pts/min"
-                    )
-    
-    # Display efficiency table
-    st.subheader("Efficiency Comparison Table")
-    
-    if not df.empty:
-        # Sort options
-        col1, col2 = st.columns(2)
-        with col1:
-            sort_column = st.selectbox(
-                "Sort by",
-                options=df.columns,
-                index=4,  # Default to Efficiency
-                key="efficiency_sort_col"
-            )
-        with col2:
-            sort_ascending = st.radio(
-                "Sort Order",
-                ["Descending", "Ascending"],
-                index=0,
-                horizontal=True,
-                key="efficiency_sort_order"
-            )
+                efficiency = (summary['total_points_by_type'][activity_type] / 
+                            summary['total_speedups_by_type'][activity_type] 
+                            if summary['total_speedups_by_type'][activity_type] > 0 else 0.0)
+                summary_data.append({
+                    'Category': activity_type,
+                    'Total Points': summary['total_points_by_type'][activity_type],
+                    'Total Speed-ups': summary['total_speedups_by_type'][activity_type],
+                    'Avg Efficiency (pts/min)': efficiency
+                })
         
-        # Sort DataFrame
-        df_sorted = df.sort_values(
-            by=sort_column,
-            ascending=(sort_ascending == "Ascending"),
-            ignore_index=True
-        )
-        
-        # Display table
+        summary_df = pd.DataFrame(summary_data)
         st.dataframe(
-            df_sorted,
+            summary_df,
             use_container_width=True,
             hide_index=True
         )
-        
-        # Export functionality
-        csv = df_sorted.to_csv(index=False).encode("utf-8")
+    
+    # Split into category-specific tables
+    category_dfs = create_category_dataframes(df)
+    
+    # Display category-specific tables
+    for category in ['Construction', 'Research', 'Training']:
+        category_df = category_dfs[category]
+        if not category_df.empty:
+            st.subheader(f"{category} Entries")
+            
+            # Calculate category summary
+            category_summary = calculate_category_summary(category_df, category)
+            
+            # Display category summary metrics
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric(
+                    f"{category} Entries",
+                    category_summary['entry_count']
+                )
+            with col2:
+                st.metric(
+                    f"{category} Total Points",
+                    f"{category_summary['total_points']:,.0f}"
+                )
+            with col3:
+                st.metric(
+                    f"{category} Total Speed-ups",
+                    f"{category_summary['total_speedups']:,.0f} min"
+                )
+            with col4:
+                st.metric(
+                    f"{category} Avg Efficiency",
+                    f"{category_summary['avg_efficiency']:.2f} pts/min"
+                )
+            
+            # Display category table
+            display_df = category_df.drop('Activity Type', axis=1)  # Remove redundant column
+            st.dataframe(
+                display_df,
+                use_container_width=True,
+                hide_index=True
+            )
+        else:
+            st.subheader(f"{category} Entries")
+            st.info(f"No {category.lower()} entries available. Add entries in the sidebar.")
+    
+    # Export functionality
+    if not df.empty:
+        st.subheader("Export Data")
+        csv = df.to_csv(index=False).encode("utf-8")
         st.download_button(
-            label="Export Efficiency Data (CSV)",
+            label="Export All Efficiency Data (CSV)",
             data=csv,
             file_name="hall_of_chiefs_efficiency.csv",
             mime="text/csv",
             key="export_efficiency_csv"
-        )
-    else:
-        st.info("No data available. Add entries in the sidebar to see efficiency comparisons.") 
+        ) 

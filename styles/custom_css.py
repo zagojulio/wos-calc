@@ -101,6 +101,44 @@ CUSTOM_CSS = """
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
     
+    /* Red Remove buttons */
+    .stButton>button[data-testid*="remove"] {
+        background-color: #DC3545;
+        color: #FFFFFF;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+        border: none;
+        transition: all 0.3s ease;
+        min-height: 36px;
+    }
+    
+    .stButton>button[data-testid*="remove"]:hover {
+        background-color: #C82333;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+    }
+    
+    /* Remove All Entries button */
+    .stButton>button[data-testid*="Remove All Entries"] {
+        background-color: #DC3545;
+        color: #FFFFFF;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+        border: none;
+        transition: all 0.3s ease;
+        min-height: 44px;
+    }
+    
+    .stButton>button[data-testid*="Remove All Entries"]:hover {
+        background-color: #C82333;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+    }
+    
     /* Sidebar - Improved contrast and spacing */
     .css-1d391kg {
         background-color: #252525;
