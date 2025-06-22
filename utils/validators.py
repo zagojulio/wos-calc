@@ -8,7 +8,6 @@ def validate_speedup_inputs(
     current_level: int,
     target_level: int,
     current_points: float,
-    target_points: float,
     speedup_categories: Dict[str, Dict[str, Any]]
 ) -> Tuple[bool, str]:
     """
@@ -18,7 +17,6 @@ def validate_speedup_inputs(
         current_level (int): Current training level
         target_level (int): Target training level
         current_points (float): Current training points
-        target_points (float): Target training points
         speedup_categories (Dict): Speedup category configurations
     
     Returns:
@@ -30,11 +28,8 @@ def validate_speedup_inputs(
     if current_level > target_level:
         return False, "Current level cannot be higher than target level"
     
-    if current_points < 0 or target_points < 0:
+    if current_points < 0:
         return False, "Points cannot be negative"
-    
-    if current_points > target_points:
-        return False, "Current points cannot be higher than target points"
     
     for category, config in speedup_categories.items():
         if config['cost'] < 0:

@@ -1,0 +1,19 @@
+[
+  {
+    "Pack Name": "Fast development pack",
+    "Price": 619.9,
+    "60min Speedups": 200,
+    "5min Speedups": 4800,
+    "Total Speedup Minutes": 36000,
+    "Cost per Minute": 0.0172
+  },
+  {
+
+    "Pack Name": "Dawn market speedup",
+    "Price": 619.9,
+    "60min Speedups": 360,
+    "5min Speedups": 2880,
+    "Total Speedup Minutes": 36000,
+    "Cost per Minute": 0.0172
+  }
+]
