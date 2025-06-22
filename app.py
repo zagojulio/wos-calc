@@ -19,7 +19,7 @@ def main():
     init_session_state()
 
     # Main tabs navigation
-    tab1, tab2, tab3 = st.tabs(["Training Analysis", "Pack Purchases", "Pack Value Comparison"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Training Analysis", "Pack Purchases", "Pack Value Comparison", "Hall of Chiefs"])
 
     # Training Analysis Tab
     with tab1:
@@ -38,6 +38,12 @@ def main():
         # Render the new pack value comparison tab
         from features.pack_value_comparison import render_pack_value_comparison_tab
         render_pack_value_comparison_tab()
+
+    # Hall of Chiefs Tab
+    with tab4:
+        # Render the Hall of Chiefs points efficiency tab
+        from features.hall_of_chiefs import render_hall_of_chiefs_tab
+        render_hall_of_chiefs_tab()
 
 if __name__ == "__main__":
     main()

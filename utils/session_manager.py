@@ -26,6 +26,13 @@ def init_session_state():
             'points_per_troop': 830.0
         }
 
+    # Initialize Hall of Chiefs session state
+    if 'hall_of_chiefs_construction_entries' not in st.session_state:
+        st.session_state.hall_of_chiefs_construction_entries = []
+    
+    if 'hall_of_chiefs_research_entries' not in st.session_state:
+        st.session_state.hall_of_chiefs_research_entries = []
+
 def update_training_params(params: Dict[str, Any]):
     """Update training parameters in session state."""
     st.session_state.training_params.update(params)
