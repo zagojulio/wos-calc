@@ -77,153 +77,203 @@ def calculate_training_points(params: Dict[str, Any]) -> Tuple[float, float]:
     speedup_minutes_used = batches * base_training_time
     return total_points, speedup_minutes_used
 
+def validate_construction_entry(description: str, power: float, speedup_minutes: float) -> Tuple[bool, str]:
+    """
+    Validate construction entry inputs.
+    
+    Args:
+        description (str): Entry description
+        power (float): Power value
+        speedup_minutes (float): Speed-up minutes
+    
+    Returns:
+        Tuple[bool, str]: (is_valid, error_message)
+    """
+    if not description.strip():
+        return False, "Description is required"
+    
+    if power <= 0:
+        return False, "Power must be greater than 0"
+    
+    if speedup_minutes < 0:
+        return False, "Speed-up minutes cannot be negative"
+    
+    return True, ""
+
+def validate_research_entry(description: str, power: float, speedup_minutes: float) -> Tuple[bool, str]:
+    """
+    Validate research entry inputs.
+    
+    Args:
+        description (str): Entry description
+        power (float): Power value
+        speedup_minutes (float): Speed-up minutes
+    
+    Returns:
+        Tuple[bool, str]: (is_valid, error_message)
+    """
+    if not description.strip():
+        return False, "Description is required"
+    
+    if power <= 0:
+        return False, "Power must be greater than 0"
+    
+    if speedup_minutes < 0:
+        return False, "Speed-up minutes cannot be negative"
+    
+    return True, ""
+
 def render_construction_sidebar() -> List[Dict[str, Any]]:
     """Render construction parameters in sidebar."""
     with st.sidebar.expander("Construction Parameters", expanded=False):
-        st.subheader("Construction Entries")
+        st.subheader("Add Construction Entry")
         
+        # Get current entries for return value
         entries = st.session_state.get(CONSTRUCTION_ENTRIES_KEY, [])
         
-        # Add new entry button
-        if st.button("Add Construction Entry", key="add_construction"):
-            entries.append({
-                'description': '',
-                'power': 0.0,
-                'speedup_minutes': 0.0,
-                'points_per_power': 30
-            })
-            st.session_state[CONSTRUCTION_ENTRIES_KEY] = entries
-            st.experimental_rerun()
+        # Input fields for new entry
+        description = st.text_input(
+            "Description",
+            key="new_construction_description",
+            help="Required description for this construction entry"
+        )
         
-        # Render existing entries
-        for i, entry in enumerate(entries):
-            with st.container():
-                st.write(f"**Entry {i + 1}**")
-                
-                # Description field
-                description = st.text_input(
-                    "Description",
-                    value=entry.get('description', ''),
-                    key=f"construction_description_{i}",
-                    help="Optional description for this construction entry"
-                )
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    power = st.number_input(
-                        "Power",
-                        min_value=0.0,
-                        value=entry['power'],
-                        step=1.0,
-                        key=f"construction_power_{i}"
-                    )
-                    speedup_minutes = st.number_input(
-                        "Speed-up Minutes",
-                        min_value=0.0,
-                        value=entry['speedup_minutes'],
-                        step=1.0,
-                        key=f"construction_speedup_{i}"
-                    )
-                
-                with col2:
-                    points_per_power = st.selectbox(
-                        "Points per Power",
-                        options=[30, 45],
-                        index=0 if entry['points_per_power'] == 30 else 1,
-                        key=f"construction_points_per_power_{i}"
-                    )
-                    
-                    # Red Remove button
-                    if st.button(
-                        "Remove", 
-                        key=f"remove_construction_{i}",
-                        help="Remove this construction entry"
-                    ):
-                        entries.pop(i)
-                        st.session_state[CONSTRUCTION_ENTRIES_KEY] = entries
-                        st.experimental_rerun()
-                
-                # Update entry
-                entry.update({
-                    'description': description,
+        col1, col2 = st.columns(2)
+        with col1:
+            power = st.number_input(
+                "Power",
+                min_value=0.0,
+                value=0.0,
+                step=1.0,
+                key="new_construction_power",
+                help="Required power value"
+            )
+            speedup_minutes = st.number_input(
+                "Speed-up Minutes",
+                min_value=0.0,
+                value=0.0,
+                step=1.0,
+                key="new_construction_speedup",
+                help="Speed-up minutes used"
+            )
+        
+        with col2:
+            points_per_power = st.selectbox(
+                "Points per Power",
+                options=[30, 45],
+                index=0,
+                key="new_construction_points_per_power"
+            )
+        
+        # Add Entry button
+        if st.button("Add Entry", key="add_construction_entry", type="primary"):
+            # Validate inputs
+            is_valid, error_message = validate_construction_entry(description, power, speedup_minutes)
+            
+            if is_valid:
+                # Create new entry
+                new_entry = {
+                    'description': description.strip(),
                     'power': power,
                     'speedup_minutes': speedup_minutes,
                     'points_per_power': points_per_power
-                })
+                }
+                
+                # Add to session state
+                entries.append(new_entry)
+                st.session_state[CONSTRUCTION_ENTRIES_KEY] = entries
+                
+                # Clear input fields by updating session state keys
+                st.session_state["new_construction_description"] = ""
+                st.session_state["new_construction_power"] = 0.0
+                st.session_state["new_construction_speedup"] = 0.0
+                st.session_state["new_construction_points_per_power"] = 30
+                
+                st.success(f"Construction entry '{description.strip()}' added successfully!")
+                st.experimental_rerun()
+            else:
+                st.error(f"Validation error: {error_message}")
+        
+        # Show current entries count
+        if entries:
+            st.info(f"Current entries: {len(entries)}")
         
         return entries
 
 def render_research_sidebar() -> List[Dict[str, Any]]:
     """Render research parameters in sidebar."""
     with st.sidebar.expander("Research Parameters", expanded=False):
-        st.subheader("Research Entries")
+        st.subheader("Add Research Entry")
         
+        # Get current entries for return value
         entries = st.session_state.get(RESEARCH_ENTRIES_KEY, [])
         
-        # Add new entry button
-        if st.button("Add Research Entry", key="add_research"):
-            entries.append({
-                'description': '',
-                'power': 0.0,
-                'speedup_minutes': 0.0,
-                'points_per_power': 30
-            })
-            st.session_state[RESEARCH_ENTRIES_KEY] = entries
-            st.experimental_rerun()
+        # Input fields for new entry
+        description = st.text_input(
+            "Description",
+            key="new_research_description",
+            help="Required description for this research entry"
+        )
         
-        # Render existing entries
-        for i, entry in enumerate(entries):
-            with st.container():
-                st.write(f"**Entry {i + 1}**")
-                
-                description = st.text_input(
-                    "Description",
-                    value=entry['description'],
-                    key=f"research_description_{i}"
-                )
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    power = st.number_input(
-                        "Power",
-                        min_value=0.0,
-                        value=entry.get('power', 0.0),
-                        step=1.0,
-                        key=f"research_power_{i}"
-                    )
-                    speedup_minutes = st.number_input(
-                        "Speed-up Minutes",
-                        min_value=0.0,
-                        value=entry['speedup_minutes'],
-                        step=1.0,
-                        key=f"research_speedup_{i}"
-                    )
-                
-                with col2:
-                    points_per_power = st.selectbox(
-                        "Points per Power",
-                        options=[30, 45],
-                        index=0 if entry['points_per_power'] == 30 else 1,
-                        key=f"research_points_per_power_{i}"
-                    )
-                    
-                    # Red Remove button
-                    if st.button(
-                        "Remove", 
-                        key=f"remove_research_{i}",
-                        help="Remove this research entry"
-                    ):
-                        entries.pop(i)
-                        st.session_state[RESEARCH_ENTRIES_KEY] = entries
-                        st.experimental_rerun()
-                
-                # Update entry
-                entry.update({
-                    'description': description,
+        col1, col2 = st.columns(2)
+        with col1:
+            power = st.number_input(
+                "Power",
+                min_value=0.0,
+                value=0.0,
+                step=1.0,
+                key="new_research_power",
+                help="Required power value"
+            )
+            speedup_minutes = st.number_input(
+                "Speed-up Minutes",
+                min_value=0.0,
+                value=0.0,
+                step=1.0,
+                key="new_research_speedup",
+                help="Speed-up minutes used"
+            )
+        
+        with col2:
+            points_per_power = st.selectbox(
+                "Points per Power",
+                options=[30, 45],
+                index=0,
+                key="new_research_points_per_power"
+            )
+        
+        # Add Entry button
+        if st.button("Add Entry", key="add_research_entry", type="primary"):
+            # Validate inputs
+            is_valid, error_message = validate_research_entry(description, power, speedup_minutes)
+            
+            if is_valid:
+                # Create new entry
+                new_entry = {
+                    'description': description.strip(),
                     'power': power,
                     'speedup_minutes': speedup_minutes,
                     'points_per_power': points_per_power
-                })
+                }
+                
+                # Add to session state
+                entries.append(new_entry)
+                st.session_state[RESEARCH_ENTRIES_KEY] = entries
+                
+                # Clear input fields by updating session state keys
+                st.session_state["new_research_description"] = ""
+                st.session_state["new_research_power"] = 0.0
+                st.session_state["new_research_speedup"] = 0.0
+                st.session_state["new_research_points_per_power"] = 30
+                
+                st.success(f"Research entry '{description.strip()}' added successfully!")
+                st.experimental_rerun()
+            else:
+                st.error(f"Validation error: {error_message}")
+        
+        # Show current entries count
+        if entries:
+            st.info(f"Current entries: {len(entries)}")
         
         return entries
 

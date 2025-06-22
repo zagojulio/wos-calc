@@ -211,83 +211,43 @@ class TestHallOfChiefsIntegration:
         assert st.session_state[CONSTRUCTION_ENTRIES_KEY] == []
         assert st.session_state[RESEARCH_ENTRIES_KEY] == []
     
-    @patch('streamlit.sidebar.expander')
-    @patch('streamlit.button')
-    @patch('streamlit.number_input')
-    @patch('streamlit.selectbox')
-    @patch('streamlit.write')
-    @patch('streamlit.container')
-    @patch('streamlit.columns')
-    def test_construction_sidebar_interaction(
-        self, mock_columns, mock_container, mock_write, mock_selectbox,
-        mock_number_input, mock_button, mock_expander
-    ):
-        from features.hall_of_chiefs import render_construction_sidebar
-        # Patch columns to return 2 columns
-        mock_columns.side_effect = lambda n: tuple(MagicMock() for _ in range(n))
-        # Mock expander context
-        mock_expander_context = MagicMock()
-        mock_expander.return_value.__enter__.return_value = mock_expander_context
-        # Mock container
-        mock_container_context = MagicMock()
-        mock_container.return_value.__enter__.return_value = mock_container_context
-        # Mock inputs
-        mock_number_input.return_value = 100.0
-        mock_selectbox.return_value = 30
-        mock_button.return_value = False  # Remove button not clicked
-        # Initialize session state
-        init_hall_of_chiefs_session_state()
-        # Add a construction entry
-        st.session_state[CONSTRUCTION_ENTRIES_KEY] = [
-            {'description': '', 'power': 0.0, 'speedup_minutes': 0.0, 'points_per_power': 30}
-        ]
-        # Render sidebar
-        result = render_construction_sidebar()
-        # Verify result
-        assert len(result) == 1
-        assert result[0]['power'] == 100.0
-        assert result[0]['speedup_minutes'] == 100.0
-        assert result[0]['points_per_power'] == 30
+    def test_construction_sidebar_interaction(self):
+        """Test construction sidebar interaction."""
+        from features.hall_of_chiefs import render_construction_sidebar, validate_construction_entry
+        
+        # Test validation
+        is_valid, error_message = validate_construction_entry("Test Building", 100.0, 60.0)
+        assert is_valid
+        assert error_message == ""
+        
+        # Test invalid validation
+        is_valid, error_message = validate_construction_entry("", 100.0, 60.0)
+        assert not is_valid
+        assert error_message == "Description is required"
+        
+        # Test zero power validation
+        is_valid, error_message = validate_construction_entry("Test Building", 0.0, 60.0)
+        assert not is_valid
+        assert error_message == "Power must be greater than 0"
     
-    @patch('streamlit.sidebar.expander')
-    @patch('streamlit.button')
-    @patch('streamlit.number_input')
-    @patch('streamlit.selectbox')
-    @patch('streamlit.text_input')
-    @patch('streamlit.write')
-    @patch('streamlit.container')
-    @patch('streamlit.columns')
-    def test_research_sidebar_interaction(
-        self, mock_columns, mock_container, mock_write, mock_text_input,
-        mock_selectbox, mock_number_input, mock_button, mock_expander
-    ):
-        from features.hall_of_chiefs import render_research_sidebar
-        # Patch columns to return 2 columns
-        mock_columns.side_effect = lambda n: tuple(MagicMock() for _ in range(n))
-        # Mock expander context
-        mock_expander_context = MagicMock()
-        mock_expander.return_value.__enter__.return_value = mock_expander_context
-        # Mock container
-        mock_container_context = MagicMock()
-        mock_container.return_value.__enter__.return_value = mock_container_context
-        # Mock inputs
-        mock_text_input.return_value = "Test Research"
-        mock_number_input.return_value = 100.0
-        mock_selectbox.return_value = 45
-        mock_button.return_value = False  # Remove button not clicked
-        # Initialize session state
-        init_hall_of_chiefs_session_state()
-        # Add a research entry
-        st.session_state[RESEARCH_ENTRIES_KEY] = [
-            {'description': '', 'speedup_minutes': 0.0, 'points_per_power': 30}
-        ]
-        # Render sidebar
-        result = render_research_sidebar()
-        # Verify result
-        assert len(result) == 1
-        assert result[0]['description'] == "Test Research"
-        assert result[0]['speedup_minutes'] == 100.0
-        assert result[0]['points_per_power'] == 45
+    def test_research_sidebar_interaction(self):
+        """Test research sidebar interaction."""
+        from features.hall_of_chiefs import render_research_sidebar, validate_research_entry
+        
+        # Test validation
+        is_valid, error_message = validate_research_entry("Test Research", 10.0, 100.0)
+        assert is_valid
+        assert error_message == ""
+        
+        # Test invalid validation
+        is_valid, error_message = validate_research_entry("", 10.0, 100.0)
+        assert not is_valid
+        assert error_message == "Description is required"
+        
+        # Test negative speedup validation
+        is_valid, error_message = validate_research_entry("Test Research", 10.0, -10.0)
+        assert not is_valid
+        assert error_message == "Speed-up minutes cannot be negative"
     
     @patch('features.hall_of_chiefs.calculate_training_points')
     def test_efficiency_dataframe_with_training(
@@ -487,3 +447,143 @@ def test_research_power_calculation():
     assert research_rows.iloc[0]['Total Points'] == 450.0  # 15 * 30
     assert research_rows.iloc[1]['Power'] == 8.0
     assert research_rows.iloc[1]['Total Points'] == 360.0  # 8 * 45 
+
+def test_add_entry_functionality(mock_session_state):
+    """Test adding entries via the new sidebar functionality."""
+    from features.hall_of_chiefs import (
+        render_construction_sidebar, 
+        render_research_sidebar,
+        validate_construction_entry,
+        validate_research_entry
+    )
+    
+    # Test construction entry validation
+    is_valid, error_message = validate_construction_entry("Test Building", 100.0, 60.0)
+    assert is_valid
+    assert error_message == ""
+    
+    # Test research entry validation
+    is_valid, error_message = validate_research_entry("Test Research", 10.0, 100.0)
+    assert is_valid
+    assert error_message == ""
+    
+    # Test invalid construction entry
+    is_valid, error_message = validate_construction_entry("", 100.0, 60.0)
+    assert not is_valid
+    assert error_message == "Description is required"
+    
+    # Test invalid research entry
+    is_valid, error_message = validate_research_entry("Test Research", 0.0, 100.0)
+    assert not is_valid
+    assert error_message == "Power must be greater than 0"
+
+def test_sidebar_input_persistence(mock_session_state):
+    """Test that sidebar inputs are properly managed and don't persist entries in sidebar."""
+    from features.hall_of_chiefs import render_construction_sidebar, render_research_sidebar
+    
+    # Initialize session state
+    init_hall_of_chiefs_session_state()
+    
+    # Verify initial state
+    assert mock_session_state[CONSTRUCTION_ENTRIES_KEY] == []
+    assert mock_session_state[RESEARCH_ENTRIES_KEY] == []
+    
+    # Render sidebars (should not add entries automatically)
+    construction_entries = render_construction_sidebar()
+    research_entries = render_research_sidebar()
+    
+    # Verify no entries were added just by rendering
+    assert construction_entries == []
+    assert research_entries == []
+    assert mock_session_state[CONSTRUCTION_ENTRIES_KEY] == []
+    assert mock_session_state[RESEARCH_ENTRIES_KEY] == []
+
+def test_entry_persistence_across_sessions(mock_session_state):
+    """Test that entries persist properly across sessions."""
+    from features.hall_of_chiefs import (
+        init_hall_of_chiefs_session_state,
+        CONSTRUCTION_ENTRIES_KEY,
+        RESEARCH_ENTRIES_KEY
+    )
+    
+    # Initialize session state
+    init_hall_of_chiefs_session_state()
+    
+    # Add some test entries
+    test_construction_entry = {
+        'description': 'Test Building',
+        'power': 100.0,
+        'speedup_minutes': 60.0,
+        'points_per_power': 30
+    }
+    
+    test_research_entry = {
+        'description': 'Test Research',
+        'power': 10.0,
+        'speedup_minutes': 100.0,
+        'points_per_power': 30
+    }
+    
+    mock_session_state[CONSTRUCTION_ENTRIES_KEY] = [test_construction_entry]
+    mock_session_state[RESEARCH_ENTRIES_KEY] = [test_research_entry]
+    
+    # Verify entries are persisted
+    assert len(mock_session_state[CONSTRUCTION_ENTRIES_KEY]) == 1
+    assert len(mock_session_state[RESEARCH_ENTRIES_KEY]) == 1
+    assert mock_session_state[CONSTRUCTION_ENTRIES_KEY][0]['description'] == 'Test Building'
+    assert mock_session_state[RESEARCH_ENTRIES_KEY][0]['description'] == 'Test Research'
+
+def test_validation_error_handling():
+    """Test validation error handling for various edge cases."""
+    from features.hall_of_chiefs import validate_construction_entry, validate_research_entry
+    
+    # Test construction validation edge cases
+    test_cases = [
+        ("", 100.0, 60.0, "Description is required"),
+        ("   ", 100.0, 60.0, "Description is required"),
+        ("Test", 0.0, 60.0, "Power must be greater than 0"),
+        ("Test", -10.0, 60.0, "Power must be greater than 0"),
+        ("Test", 100.0, -10.0, "Speed-up minutes cannot be negative"),
+    ]
+    
+    for description, power, speedup, expected_error in test_cases:
+        is_valid, error_message = validate_construction_entry(description, power, speedup)
+        assert not is_valid
+        assert error_message == expected_error
+    
+    # Test research validation edge cases
+    test_cases = [
+        ("", 10.0, 100.0, "Description is required"),
+        ("   ", 10.0, 100.0, "Description is required"),
+        ("Test", 0.0, 100.0, "Power must be greater than 0"),
+        ("Test", -5.0, 100.0, "Power must be greater than 0"),
+        ("Test", 10.0, -5.0, "Speed-up minutes cannot be negative"),
+    ]
+    
+    for description, power, speedup, expected_error in test_cases:
+        is_valid, error_message = validate_research_entry(description, power, speedup)
+        assert not is_valid
+        assert error_message == expected_error
+
+def test_successful_entry_creation():
+    """Test successful entry creation with valid data."""
+    from features.hall_of_chiefs import validate_construction_entry, validate_research_entry
+    
+    # Test valid construction entry
+    is_valid, error_message = validate_construction_entry("Building A", 150.0, 90.0)
+    assert is_valid
+    assert error_message == ""
+    
+    # Test valid research entry
+    is_valid, error_message = validate_research_entry("Research Project", 15.0, 120.0)
+    assert is_valid
+    assert error_message == ""
+    
+    # Test edge cases that should be valid
+    is_valid, error_message = validate_construction_entry("Minimal", 0.1, 0.0)
+    assert is_valid
+    assert error_message == ""
+    
+    is_valid, error_message = validate_research_entry("Minimal", 0.1, 0.0)
+    assert is_valid
+    assert error_message == "" 

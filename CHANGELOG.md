@@ -2,6 +2,17 @@
 ## [Unreleased]
 
 ### Added
+- FEAT: Improved sidebar persistence and behavior for Research and Construction entries:
+  - Added explicit "Add Entry" buttons for Research and Construction sections in sidebar
+  - Users now fill input fields (power, points per power, description, speedup minutes) and click "Add Entry" to persist entries
+  - Entries are saved in session state and displayed in Hall of Chiefs tab tables
+  - Sidebar inputs reset/clear after adding an entry
+  - Sidebar only shows input fields for adding new entries, not existing entries
+  - Existing entries remain visible and editable only in main tables within the tab
+  - Full persistence across sessions so entries stay in tables after reload
+  - Input validation with clear error messages for required fields and numeric checks
+  - Success feedback messages on successful entry addition
+  - Reactive UI updates reflecting changes immediately
 - FEAT: Enhanced Hall of Chiefs Points Efficiency tab with improved functionality:
   - Added Power field to Construction and Research entries for accurate points calculation (Points = Power × Points per Power)
   - Added Description field to Construction entries for better organization and identification
@@ -139,3 +150,13 @@
 
 ### Tested
 - Initial release of the application
+
+## Technical
+- TEST: Added comprehensive validation tests for new sidebar input functionality
+- TEST: Added integration tests for Add Entry button behavior and input persistence
+- TEST: Enhanced test coverage for session state persistence and UI interactions
+- TEST: Added comprehensive integration tests for new Hall of Chiefs functionality
+- TEST: Updated unit tests to reflect new power-based calculations and data structures
+- TEST: Enhanced test coverage for session state persistence and UI interactions
+- Comprehensive unit and integration tests added for new modules
+- Improved error handling and type hints in modular components

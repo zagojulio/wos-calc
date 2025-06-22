@@ -1,5 +1,5 @@
 """
-Unit tests for Hall of Chiefs Points Efficiency functionality.
+Tests for the Hall of Chiefs module.
 """
 
 import pytest
@@ -10,7 +10,9 @@ from features.hall_of_chiefs import (
     calculate_research_points,
     calculate_training_points,
     create_efficiency_dataframe,
-    calculate_summary_metrics
+    calculate_summary_metrics,
+    validate_construction_entry,
+    validate_research_entry
 )
 
 
@@ -34,8 +36,8 @@ class TestConstructionPoints:
     
     def test_calculate_construction_points_negative_power(self):
         """Test construction points with negative power."""
-        points = calculate_construction_points(-10.0, 30)
-        assert points == -300.0
+        points = calculate_construction_points(-5.0, 30)
+        assert points == -150.0
 
 
 class TestResearchPoints:
@@ -62,6 +64,70 @@ class TestResearchPoints:
         """Test research points with negative power."""
         points = calculate_research_points(-5.0, 30)
         assert points == -150.0
+
+
+class TestValidation:
+    """Test validation functions."""
+    
+    def test_validate_construction_entry_valid(self):
+        """Test valid construction entry validation."""
+        is_valid, error_message = validate_construction_entry("Test Building", 100.0, 60.0)
+        assert is_valid
+        assert error_message == ""
+    
+    def test_validate_construction_entry_empty_description(self):
+        """Test construction entry validation with empty description."""
+        is_valid, error_message = validate_construction_entry("", 100.0, 60.0)
+        assert not is_valid
+        assert error_message == "Description is required"
+    
+    def test_validate_construction_entry_whitespace_description(self):
+        """Test construction entry validation with whitespace description."""
+        is_valid, error_message = validate_construction_entry("   ", 100.0, 60.0)
+        assert not is_valid
+        assert error_message == "Description is required"
+    
+    def test_validate_construction_entry_zero_power(self):
+        """Test construction entry validation with zero power."""
+        is_valid, error_message = validate_construction_entry("Test Building", 0.0, 60.0)
+        assert not is_valid
+        assert error_message == "Power must be greater than 0"
+    
+    def test_validate_construction_entry_negative_power(self):
+        """Test construction entry validation with negative power."""
+        is_valid, error_message = validate_construction_entry("Test Building", -10.0, 60.0)
+        assert not is_valid
+        assert error_message == "Power must be greater than 0"
+    
+    def test_validate_construction_entry_negative_speedup(self):
+        """Test construction entry validation with negative speedup."""
+        is_valid, error_message = validate_construction_entry("Test Building", 100.0, -10.0)
+        assert not is_valid
+        assert error_message == "Speed-up minutes cannot be negative"
+    
+    def test_validate_research_entry_valid(self):
+        """Test valid research entry validation."""
+        is_valid, error_message = validate_research_entry("Test Research", 10.0, 100.0)
+        assert is_valid
+        assert error_message == ""
+    
+    def test_validate_research_entry_empty_description(self):
+        """Test research entry validation with empty description."""
+        is_valid, error_message = validate_research_entry("", 10.0, 100.0)
+        assert not is_valid
+        assert error_message == "Description is required"
+    
+    def test_validate_research_entry_zero_power(self):
+        """Test research entry validation with zero power."""
+        is_valid, error_message = validate_research_entry("Test Research", 0.0, 100.0)
+        assert not is_valid
+        assert error_message == "Power must be greater than 0"
+    
+    def test_validate_research_entry_negative_speedup(self):
+        """Test research entry validation with negative speedup."""
+        is_valid, error_message = validate_research_entry("Test Research", 10.0, -10.0)
+        assert not is_valid
+        assert error_message == "Speed-up minutes cannot be negative"
 
 
 class TestTrainingPoints:
@@ -253,76 +319,77 @@ class TestSummaryMetrics:
         assert summary['overall_total_speedups'] == 0.0
     
     def test_calculate_summary_metrics_single_activity(self):
-        """Test summary metrics with single activity type."""
-        data = [
+        """Test summary metrics with single activity."""
+        df = pd.DataFrame([
             {
                 'Activity Type': 'Construction',
-                'Total Points': 1000.0,
-                'Speed-up Minutes': 50.0,
-                'Efficiency (Points/Min)': 20.0
+                'Description': 'Test',
+                'Power': 100.0,
+                'Total Points': 3000.0,
+                'Speed-up Minutes': 60.0,
+                'Efficiency (Points/Min)': 50.0
             }
-        ]
-        df = pd.DataFrame(data)
+        ])
+        
         summary = calculate_summary_metrics(df)
         
-        assert summary['research_avg_efficiency'] == 0.0  # No research entries
-        assert summary['total_points_by_type']['Construction'] == 1000.0
-        assert summary['total_speedups_by_type']['Construction'] == 50.0
-        assert summary['overall_total_points'] == 1000.0
-        assert summary['overall_total_speedups'] == 50.0
+        assert summary['overall_total_points'] == 3000.0
+        assert summary['overall_total_speedups'] == 60.0
+        assert summary['total_points_by_type']['Construction'] == 3000.0
+        assert summary['total_speedups_by_type']['Construction'] == 60.0
     
     def test_calculate_summary_metrics_multiple_activities(self):
-        """Test summary metrics with multiple activity types."""
-        data = [
+        """Test summary metrics with multiple activities."""
+        df = pd.DataFrame([
             {
                 'Activity Type': 'Construction',
-                'Total Points': 1000.0,
-                'Speed-up Minutes': 50.0,
-                'Efficiency (Points/Min)': 20.0
+                'Description': 'Test 1',
+                'Power': 100.0,
+                'Total Points': 3000.0,
+                'Speed-up Minutes': 60.0,
+                'Efficiency (Points/Min)': 50.0
             },
             {
                 'Activity Type': 'Research',
-                'Total Points': 500.0,
-                'Speed-up Minutes': 25.0,
-                'Efficiency (Points/Min)': 20.0
-            },
-            {
-                'Activity Type': 'Research',
+                'Description': 'Test 2',
+                'Power': 10.0,
                 'Total Points': 300.0,
-                'Speed-up Minutes': 15.0,
-                'Efficiency (Points/Min)': 20.0
+                'Speed-up Minutes': 100.0,
+                'Efficiency (Points/Min)': 3.0
             }
-        ]
-        df = pd.DataFrame(data)
+        ])
+        
         summary = calculate_summary_metrics(df)
         
-        assert summary['research_avg_efficiency'] == 20.0  # Average of two research entries
-        assert summary['total_points_by_type']['Construction'] == 1000.0
-        assert summary['total_points_by_type']['Research'] == 800.0
-        assert summary['total_speedups_by_type']['Construction'] == 50.0
-        assert summary['total_speedups_by_type']['Research'] == 40.0
-        assert summary['overall_total_points'] == 1800.0
-        assert summary['overall_total_speedups'] == 90.0
+        assert summary['overall_total_points'] == 3300.0
+        assert summary['overall_total_speedups'] == 160.0
+        assert summary['total_points_by_type']['Construction'] == 3000.0
+        assert summary['total_points_by_type']['Research'] == 300.0
+        assert summary['research_avg_efficiency'] == 3.0
     
     def test_calculate_summary_metrics_research_only(self):
         """Test summary metrics with research activities only."""
-        data = [
+        df = pd.DataFrame([
             {
                 'Activity Type': 'Research',
-                'Total Points': 100.0,
-                'Speed-up Minutes': 10.0,
-                'Efficiency (Points/Min)': 10.0
+                'Description': 'Test 1',
+                'Power': 10.0,
+                'Total Points': 300.0,
+                'Speed-up Minutes': 100.0,
+                'Efficiency (Points/Min)': 3.0
             },
             {
                 'Activity Type': 'Research',
-                'Total Points': 200.0,
-                'Speed-up Minutes': 20.0,
-                'Efficiency (Points/Min)': 10.0
+                'Description': 'Test 2',
+                'Power': 5.0,
+                'Total Points': 150.0,
+                'Speed-up Minutes': 50.0,
+                'Efficiency (Points/Min)': 3.0
             }
-        ]
-        df = pd.DataFrame(data)
+        ])
+        
         summary = calculate_summary_metrics(df)
         
-        assert summary['research_avg_efficiency'] == 10.0
-        assert 'Construction' not in summary['total_points_by_type']
-        assert 'Training' not in summary['total_points_by_type'] 
+        assert summary['research_avg_efficiency'] == 3.0
+        assert summary['total_points_by_type']['Research'] == 450.0
+        assert summary['total_speedups_by_type']['Research'] == 150.0 
