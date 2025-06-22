@@ -5,8 +5,7 @@ A web-based tool for optimizing resource investments and training strategies in 
 ## 🔧 Features
 
 ### 🛡️ Training Calculator
-- Calculate effective training times with reduction bonuses
-- Optimize speed-up usage for maximum points
+- Calculate training times and optimize speed-up usage
 - Cost analysis and level-based point returns
 - Support for multiple speed-up categories
 - Scenario comparison tools
@@ -56,16 +55,14 @@ streamlit run app.py
    - Total Speed-up Minutes Available
    - Base Training Time (days/hours/minutes/seconds)
    - Troops per Batch
-   - Training Time Reduction Bonus (%)
    - Points per Troop
-   - Target Points (optional)
 
 5. View Results:
-   - Effective Training Time
+   - Base Training Time
    - Number of Batches
    - Total Points
    - Points per Minute
-   - Required Speed-ups for Target
+   - Speed-ups Remaining
 
 6. Pack Purchases Features:
    - View automatic purchases from CSV

@@ -60,9 +60,7 @@ def mock_session_state():
                 'seconds': 0,
                 'base_training_time': 290.0,
                 'troops_per_batch': 426,
-                'time_reduction_bonus': 0.2,
-                'points_per_troop': 830.0,
-                'target_points': 10000.0
+                'points_per_troop': 830.0
             }
         
         def __getitem__(self, key):

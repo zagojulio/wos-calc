@@ -23,9 +23,7 @@ def init_session_state():
             'minutes': 50,
             'seconds': 0,
             'troops_per_batch': 426,
-            'time_reduction_bonus': 20.0,
-            'points_per_troop': 830.0,
-            'target_points': 10000.0
+            'points_per_troop': 830.0
         }
 
 def update_training_params(params: Dict[str, Any]):
