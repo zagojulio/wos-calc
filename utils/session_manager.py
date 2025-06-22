@@ -14,23 +14,23 @@ def init_session_state():
     if 'manual_purchases' not in st.session_state:
         st.session_state.manual_purchases = None
 
-    # Initialize training parameters - only set if not already present
+    # Initialize training parameters - set safe defaults if not already present
     if 'training_params' not in st.session_state:
         st.session_state.training_params = {
             'days': 0,
-            'hours': 0,
-            'minutes': 0,
+            'hours': 4,  # Safe default: 4 hours
+            'minutes': 50,  # Safe default: 50 minutes
             'seconds': 0,
-            'troops_per_batch': 0,
-            'points_per_troop': 0.0
+            'troops_per_batch': 426,  # Safe default: 426 troops
+            'points_per_troop': 830.0  # Safe default: 830 points per troop
         }
 
-    # Initialize speed-up inventory - only set if not already present
+    # Initialize speed-up inventory - set safe defaults if not already present
     if 'speedup_inventory' not in st.session_state:
         st.session_state.speedup_inventory = {
-            'general': 0.0,
+            'general': 18000.0,  # Safe default: 18k general speedups
             'construction': 0.0,
-            'training': 0.0,
+            'training': 1515.0,  # Safe default: 1515 training speedups
             'research': 0.0
         }
 

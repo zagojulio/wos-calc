@@ -16,16 +16,16 @@ class MockSessionState:
         super().__setattr__('_data', {
             'training_params': {
                 'days': 0,
-                'hours': 0,
-                'minutes': 0,
+                'hours': 4,  # Safe default: 4 hours
+                'minutes': 50,  # Safe default: 50 minutes
                 'seconds': 0,
-                'troops_per_batch': 0,
-                'points_per_troop': 0.0
+                'troops_per_batch': 426,  # Safe default: 426 troops
+                'points_per_troop': 830.0  # Safe default: 830 points per troop
             },
             'speedup_inventory': {
-                'general': 0.0,
+                'general': 18000.0,  # Safe default: 18k general speedups
                 'construction': 0.0,
-                'training': 0.0,
+                'training': 1515.0,  # Safe default: 1515 training speedups
                 'research': 0.0
             }
         })
@@ -112,23 +112,23 @@ def test_session_state_initialization_preserves_existing_values(mock_session_sta
     assert mock_session_state['speedup_inventory']['research'] == 800.0
 
 def test_session_state_initialization_sets_defaults_when_empty(mock_session_state):
-    """Test that session state initialization sets defaults when values don't exist."""
+    """Test that session state initialization sets safe defaults when values don't exist."""
     # Initialize session state (empty)
     init_session_state()
     
-    # Verify that empty defaults were set
+    # Verify that safe defaults were set
     assert 'training_params' in mock_session_state
     assert mock_session_state['training_params']['days'] == 0
-    assert mock_session_state['training_params']['hours'] == 0
-    assert mock_session_state['training_params']['minutes'] == 0
+    assert mock_session_state['training_params']['hours'] == 4  # Safe default
+    assert mock_session_state['training_params']['minutes'] == 50  # Safe default
     assert mock_session_state['training_params']['seconds'] == 0
-    assert mock_session_state['training_params']['troops_per_batch'] == 0
-    assert mock_session_state['training_params']['points_per_troop'] == 0.0
+    assert mock_session_state['training_params']['troops_per_batch'] == 426  # Safe default
+    assert mock_session_state['training_params']['points_per_troop'] == 830.0  # Safe default
     
     assert 'speedup_inventory' in mock_session_state
-    assert mock_session_state['speedup_inventory']['general'] == 0.0
+    assert mock_session_state['speedup_inventory']['general'] == 18000.0  # Safe default
     assert mock_session_state['speedup_inventory']['construction'] == 0.0
-    assert mock_session_state['speedup_inventory']['training'] == 0.0
+    assert mock_session_state['speedup_inventory']['training'] == 1515.0  # Safe default
     assert mock_session_state['speedup_inventory']['research'] == 0.0
 
 def test_training_sidebar_persistence(mock_session_state):

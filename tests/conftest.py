@@ -53,17 +53,17 @@ def mock_session_state():
             self._state = {}
             self.training_params = {
                 'days': 0,
-                'hours': 0,
-                'minutes': 0,
+                'hours': 4,  # Safe default: 4 hours
+                'minutes': 50,  # Safe default: 50 minutes
                 'seconds': 0,
-                'base_training_time': 0.0,
-                'troops_per_batch': 0,
-                'points_per_troop': 0.0
+                'base_training_time': 290.0,  # 4h 50m in minutes
+                'troops_per_batch': 426,  # Safe default: 426 troops
+                'points_per_troop': 830.0  # Safe default: 830 points per troop
             }
             self.speedup_inventory = {
-                'general': 0.0,
+                'general': 18000.0,  # Safe default: 18k general speedups
                 'construction': 0.0,
-                'training': 0.0,
+                'training': 1515.0,  # Safe default: 1515 training speedups
                 'research': 0.0
             }
         
