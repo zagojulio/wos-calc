@@ -348,6 +348,14 @@ class HallOfChiefsSessionManager:
             return False, "At least some time must be specified"
         
         return True, ""
+    
+    def persist_speedup_inventory(self, inventory: Dict[str, float]) -> None:
+        """
+        Persist the current speedup inventory to the JSON file.
+        Args:
+            inventory (Dict[str, float]): The speedup inventory to persist
+        """
+        self.data_manager.persist_speedup_inventory(inventory)
 
 
 # Global instance for easy access

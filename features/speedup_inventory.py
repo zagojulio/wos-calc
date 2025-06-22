@@ -72,6 +72,14 @@ def render_speedup_inventory_sidebar() -> Dict[str, float]:
         }
         update_speedup_inventory(new_inventory)
         
+        # Add Update Speedup Inventory button
+        if st.button("Update Speedup Inventory", key="update_speedup_inventory_btn"):
+            # Persist the current speedup inventory to JSON
+            from features.hall_of_chiefs_session import get_session_manager
+            session_manager = get_session_manager()
+            session_manager.persist_speedup_inventory(new_inventory)
+            st.success("Speedup inventory updated and saved!")
+        
         return new_inventory
 
 def calculate_available_speedups_for_category(

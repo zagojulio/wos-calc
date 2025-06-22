@@ -59,7 +59,7 @@ def validate_training_inputs(
 
 def render_training_sidebar():
     """Render training parameters in the sidebar."""
-    with st.sidebar.expander("Training Parameters", expanded=True):
+    with st.sidebar.expander("Training Tab Parameters", expanded=True):
         st.subheader("Base Training Time")
         col1, col2 = st.columns(2)
         with col1:

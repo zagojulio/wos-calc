@@ -1,6 +1,6 @@
 [
   {
-    "Pack Name": "Fast development pack",
+    "Pack Name": "Fast Development Pack",
     "Price": 619.9,
     "60min Speedups": 200,
     "5min Speedups": 4800,
@@ -8,15 +8,11 @@
     "Cost per Minute": 0.0172
   },
   {
-<<<<<<< HEAD
-    "Pack Name": "Dawn market",
-=======
-    "Pack Name": "Dawn market speedup",
->>>>>>> 60e536d ([WIP] Hall of Chiefs: segregate config sections)
-    "Price": 619.9,
-    "60min Speedups": 360,
-    "5min Speedups": 2880,
-    "Total Speedup Minutes": 36000,
+    "Pack Name": "Dawn market speedups",
+    "Price": 30.9,
+    "60min Speedups": 17,
+    "5min Speedups": 156,
+    "Total Speedup Minutes": 1800,
     "Cost per Minute": 0.0172
   }
 ]

@@ -402,4 +402,39 @@ class TestSummaryMetrics:
         
         assert summary['research_avg_efficiency'] == 3.0
         assert summary['total_points_by_type']['Research'] == 450.0
-        assert summary['total_speedups_by_type']['Research'] == 150.0 
+        assert summary['total_speedups_by_type']['Research'] == 150.0
+
+    def test_data_editor_usage(self):
+        """Test that data editor is used instead of experimental_data_editor."""
+        # This test verifies that we're using the modern st.data_editor API
+        # The actual implementation should use st.data_editor, not st.experimental_data_editor
+        from features.hall_of_chiefs import render_hall_of_chiefs_tab
+        
+        # Import the module and check that it doesn't contain experimental_data_editor
+        import features.hall_of_chiefs as hoc
+        source_code = open('features/hall_of_chiefs.py', 'r').read()
+        
+        # Should not contain experimental_data_editor
+        assert 'st.experimental_data_editor' not in source_code
+        
+        # Should contain data_editor
+        assert 'st.data_editor' in source_code
+    
+    def test_delete_confirmation_ui_structure(self):
+        """Test that delete confirmation UI is properly structured."""
+        # This test verifies the structure of the delete confirmation UI
+        # The UI should have proper columns and buttons
+        from features.hall_of_chiefs import render_hall_of_chiefs_tab
+        
+        # Check that the confirmation UI uses proper column layout
+        source_code = open('features/hall_of_chiefs.py', 'r').read()
+        
+        # Should have confirmation dialog with columns
+        assert 'col1, col2, col3 = st.columns([2, 1, 1])' in source_code
+        
+        # Should have Yes/No buttons
+        assert '✅ Yes' in source_code
+        assert '❌ No' in source_code
+        
+        # Should have warning message
+        assert 'st.warning(' in source_code 

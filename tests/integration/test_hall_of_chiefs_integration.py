@@ -16,6 +16,8 @@ from features.hall_of_chiefs import (
     calculate_summary_metrics
 )
 from features.hall_of_chiefs_data import CONSTRUCTION_CATEGORY, RESEARCH_CATEGORY, TRAINING_CATEGORY
+from features.hall_of_chiefs_session import get_session_manager
+from utils.session_manager import init_session_state
 
 
 class TestHallOfChiefsIntegration:
@@ -537,4 +539,117 @@ class TestHallOfChiefsIntegration:
         assert len(training_rows) == 1
         assert '⚠️ (Invalid: Zero training time)' in training_rows.iloc[0]['Description']
         assert training_rows.iloc[0]['Total Points'] == 0.0
-        assert training_rows.iloc[0]['Speed-up Minutes'] == 0.0 
+        assert training_rows.iloc[0]['Speed-up Minutes'] == 0.0
+    
+    def test_row_deletion_with_confirmation(self, mock_session_state):
+        """Test row deletion with confirmation dialog."""
+        # Use a temporary data file for testing
+        import tempfile
+        import os
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            temp_data_file = f.name
+            # Write empty initial data
+            f.write('{"construction": [], "research": [], "training": [], "metadata": {"created": "2024-01-01", "version": "1.0"}}')
+        
+        try:
+            # Patch the data file path
+            with patch('features.hall_of_chiefs_data.HALL_OF_CHIEFS_DATA_FILE', temp_data_file):
+                # Initialize session state
+                init_session_state()
+                
+                # Add a test entry
+                session_manager = get_session_manager()
+                test_entry = {
+                    'description': 'Test Construction',
+                    'power': 100.0,
+                    'speedup_minutes': 60.0,
+                    'points_per_power': 30
+                }
+                
+                success, message = session_manager.add_entry('construction', test_entry)
+                assert success
+                
+                # Verify entry was added
+                entries = session_manager.get_entries('construction')
+                assert len(entries) == 1
+                entry_id = entries[0]['id']
+                
+                # Test deletion confirmation flow
+                # First click should set confirmation state
+                delete_confirm_key = f"confirm_delete_Construction_{entry_id}"
+                mock_session_state[delete_confirm_key] = True
+                
+                # Verify confirmation state is set
+                assert mock_session_state[delete_confirm_key] is True
+                
+                # Simulate confirmation (Yes button)
+                success, message = session_manager.delete_entry('construction', entry_id)
+                assert success
+                
+                # Verify entry was deleted
+                entries = session_manager.get_entries('construction')
+                assert len(entries) == 0
+                
+                # Verify confirmation state was cleared
+                mock_session_state[delete_confirm_key] = False
+                assert mock_session_state[delete_confirm_key] is False
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_data_file):
+                os.unlink(temp_data_file)
+    
+    def test_row_deletion_cancellation(self, mock_session_state):
+        """Test row deletion cancellation."""
+        # Use a temporary data file for testing
+        import tempfile
+        import os
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            temp_data_file = f.name
+            # Write empty initial data
+            f.write('{"construction": [], "research": [], "training": [], "metadata": {"created": "2024-01-01", "version": "1.0"}}')
+        
+        try:
+            # Patch the data file path
+            with patch('features.hall_of_chiefs_data.HALL_OF_CHIEFS_DATA_FILE', temp_data_file):
+                # Initialize session state
+                init_session_state()
+                
+                # Add a test entry
+                session_manager = get_session_manager()
+                test_entry = {
+                    'description': 'Test Research',
+                    'power': 50.0,
+                    'speedup_minutes': 30.0,
+                    'points_per_power': 45
+                }
+                
+                success, message = session_manager.add_entry('research', test_entry)
+                assert success
+                
+                # Verify entry was added
+                entries = session_manager.get_entries('research')
+                assert len(entries) == 1
+                entry_id = entries[0]['id']
+                
+                # Test cancellation flow
+                delete_confirm_key = f"confirm_delete_Research_{entry_id}"
+                
+                # Set confirmation state
+                mock_session_state[delete_confirm_key] = True
+                assert mock_session_state[delete_confirm_key] is True
+                
+                # Simulate cancellation (No button)
+                mock_session_state[delete_confirm_key] = False
+                
+                # Verify entry still exists
+                entries = session_manager.get_entries('research')
+                assert len(entries) == 1
+                
+                # Verify confirmation state was cleared
+                assert mock_session_state[delete_confirm_key] is False
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_data_file):
+                os.unlink(temp_data_file) 

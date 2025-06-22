@@ -271,13 +271,13 @@ def render_training_sidebar() -> None:
         st.write("**Training Time:**")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            days = st.number_input("Days", min_value=0, value=0, key=f"new_{TRAINING_CATEGORY}_days")
+            days = st.number_input("Days", min_value=0, key=f"new_{TRAINING_CATEGORY}_days")
         with col2:
-            hours = st.number_input("Hours", min_value=0, value=0, key=f"new_{TRAINING_CATEGORY}_hours")
+            hours = st.number_input("Hours", min_value=0, key=f"new_{TRAINING_CATEGORY}_hours")
         with col3:
-            minutes = st.number_input("Minutes", min_value=0, value=0, key=f"new_{TRAINING_CATEGORY}_minutes")
+            minutes = st.number_input("Minutes", min_value=0, key=f"new_{TRAINING_CATEGORY}_minutes")
         with col4:
-            seconds = st.number_input("Seconds", min_value=0, value=0, key=f"new_{TRAINING_CATEGORY}_seconds")
+            seconds = st.number_input("Seconds", min_value=0, key=f"new_{TRAINING_CATEGORY}_seconds")
         
         # Training parameters
         col1, col2 = st.columns(2)
@@ -285,14 +285,12 @@ def render_training_sidebar() -> None:
             troops_per_batch = st.number_input(
                 "Troops per Batch",
                 min_value=1,
-                value=426,
                 key=f"new_{TRAINING_CATEGORY}_troops_per_batch"
             )
         with col2:
             points_per_troop = st.number_input(
                 "Points per Troop",
                 min_value=0.1,
-                value=830.0,
                 step=0.1,
                 key=f"new_{TRAINING_CATEGORY}_points_per_troop"
             )
@@ -589,6 +587,54 @@ def render_hall_of_chiefs_tab() -> None:
     # Get session manager
     session_manager = get_session_manager()
     
+    # Display current speed-up inventory
+    from utils.session_manager import get_speedup_inventory
+    speedup_inventory = get_speedup_inventory()
+    
+    st.subheader("📊 Current Speed-up Inventory")
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        st.metric(
+            "General",
+            f"{speedup_inventory['general']:,.0f}",
+            help="General purpose speed-up minutes (usable for any category)"
+        )
+    with col2:
+        st.metric(
+            "Construction",
+            f"{speedup_inventory['construction']:,.0f}",
+            help="Speed-up minutes specifically for construction activities"
+        )
+    with col3:
+        st.metric(
+            "Training",
+            f"{speedup_inventory['training']:,.0f}",
+            help="Speed-up minutes specifically for troop training"
+        )
+    with col4:
+        st.metric(
+            "Research",
+            f"{speedup_inventory['research']:,.0f}",
+            help="Speed-up minutes specifically for research activities"
+        )
+    with col5:
+        total_speedups = sum(speedup_inventory.values())
+        st.metric(
+            "Total",
+            f"{total_speedups:,.0f}",
+            help="Total speed-up minutes across all categories"
+        )
+    
+    # Add a visual progress bar for total speed-ups
+    if total_speedups > 0:
+        # Calculate percentage relative to a reasonable maximum (e.g., 50k minutes)
+        max_display = 50000
+        percentage = min((total_speedups / max_display) * 100, 100)
+        st.progress(percentage / 100, text=f"Speed-up Inventory: {total_speedups:,.0f} / {max_display:,.0f} minutes")
+    
+    st.divider()
+    
     # Render sidebar sections
     render_construction_sidebar()
     render_research_sidebar()
@@ -717,7 +763,7 @@ def render_hall_of_chiefs_tab() -> None:
             display_df = category_df.drop(['Activity Type', 'id'], axis=1, errors='ignore')
             
             # Use data editor for inline editing
-            edited_df = st.experimental_data_editor(
+            edited_df = st.data_editor(
                 display_df,
                 use_container_width=True,
                 hide_index=True,
@@ -729,6 +775,44 @@ def render_hall_of_chiefs_tab() -> None:
                 handle_data_editor_changes(category_df, category.lower())
                 st.success("Changes saved successfully!")
                 st.experimental_rerun()
+
+            # Add row-wise delete buttons with proper confirmation
+            st.subheader(f"Delete {category} Entries")
+            for idx, row in category_df.iterrows():
+                entry_id = row['id'] if 'id' in row else None
+                if entry_id:
+                    # Check if this entry is pending deletion confirmation
+                    delete_confirm_key = f"confirm_delete_{category}_{entry_id}"
+                    is_pending_confirmation = st.session_state.get(delete_confirm_key, False)
+                    
+                    if is_pending_confirmation:
+                        # Show confirmation dialog
+                        col1, col2, col3 = st.columns([2, 1, 1])
+                        with col1:
+                            st.warning(f"Are you sure you want to delete '{row.get('Description', 'Unknown')}'?")
+                        with col2:
+                            if st.button("✅ Yes", key=f"confirm_yes_{category}_{entry_id}", type="primary"):
+                                success, message = session_manager.delete_entry(category.lower(), entry_id)
+                                if success:
+                                    st.success("Entry deleted successfully!")
+                                    st.session_state[delete_confirm_key] = False
+                                    st.experimental_rerun()
+                                else:
+                                    st.error(f"Failed to delete entry: {message}")
+                                    st.session_state[delete_confirm_key] = False
+                        with col3:
+                            if st.button("❌ No", key=f"confirm_no_{category}_{entry_id}"):
+                                st.session_state[delete_confirm_key] = False
+                                st.experimental_rerun()
+                    else:
+                        # Show delete button
+                        col1, col2 = st.columns([1, 10])
+                        with col1:
+                            if st.button("🗑️", key=f"delete_{category}_{entry_id}", help=f"Delete {row.get('Description', 'Unknown')}"):
+                                st.session_state[delete_confirm_key] = True
+                                st.experimental_rerun()
+                        with col2:
+                            st.write(f"**{row.get('Description', 'Unknown')}** - {row.get('Total Points', 0):,.0f} points")
         else:
             st.subheader(f"{category} Entries")
             st.info(f"No {category.lower()} entries available. Add entries in the sidebar.")

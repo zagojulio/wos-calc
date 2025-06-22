@@ -366,6 +366,18 @@ class HallOfChiefsDataManager:
             return True, f"Backup created successfully at {backup_path}"
         except Exception as e:
             return False, f"Failed to create backup: {str(e)}"
+    
+    def persist_speedup_inventory(self, inventory: Dict[str, float]) -> None:
+        """
+        Persist the speedup inventory to the JSON file under the 'metadata' section.
+        Args:
+            inventory (Dict[str, float]): The speedup inventory to persist
+        """
+        data = self._read_data()
+        if 'metadata' not in data:
+            data['metadata'] = {}
+        data['metadata']['speedup_inventory'] = inventory
+        self._write_data(data)
 
 
 # Global instance for easy access
