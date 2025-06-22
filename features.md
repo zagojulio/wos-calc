@@ -6,7 +6,6 @@
 - ✅ Basic calculation of training times and points
 - ✅ Speed-up utilization calculations
 - ✅ Points efficiency metrics
-- ✅ Target points calculation
 - ✅ Multiple scenario comparison
 
 ### User Interface

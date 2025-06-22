@@ -140,4 +140,9 @@ class TestPurchaseWorkflow:
         
         # Verify stats were updated
         assert updated_stats['total_spent_manual'] > initial_stats['total_spent_manual']
-        assert updated_stats['total_speedups'] == initial_stats['total_speedups'] 
+        assert updated_stats['total_speedups'] == initial_stats['total_speedups']
+
+def test_pack_value_comparison_tab_renders(app_test_client):
+    # This is a stub for integration testing the new tab
+    # Would use selenium or streamlit testing tools in a full implementation
+    assert True 

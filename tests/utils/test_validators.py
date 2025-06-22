@@ -6,43 +6,37 @@ from utils.validators import validate_speedup_inputs, validate_pack_purchase
 
 def test_validate_speedup_inputs_valid():
     speedup_categories = {"1m": {"cost": 1, "points": 1}}
-    valid, msg = validate_speedup_inputs(1, 2, 0, 100, speedup_categories)
+    valid, msg = validate_speedup_inputs(1, 2, 0, speedup_categories)
     assert valid
     assert msg == ""
 
 def test_validate_speedup_inputs_negative_levels():
     speedup_categories = {"1m": {"cost": 1, "points": 1}}
-    valid, msg = validate_speedup_inputs(-1, 2, 0, 100, speedup_categories)
+    valid, msg = validate_speedup_inputs(-1, 2, 0, speedup_categories)
     assert not valid
     assert "negative" in msg
 
 def test_validate_speedup_inputs_level_order():
     speedup_categories = {"1m": {"cost": 1, "points": 1}}
-    valid, msg = validate_speedup_inputs(5, 2, 0, 100, speedup_categories)
+    valid, msg = validate_speedup_inputs(5, 2, 0, speedup_categories)
     assert not valid
     assert "higher" in msg
 
 def test_validate_speedup_inputs_negative_points():
     speedup_categories = {"1m": {"cost": 1, "points": 1}}
-    valid, msg = validate_speedup_inputs(1, 2, -10, 100, speedup_categories)
+    valid, msg = validate_speedup_inputs(1, 2, -10, speedup_categories)
     assert not valid
     assert "negative" in msg
 
-def test_validate_speedup_inputs_points_order():
-    speedup_categories = {"1m": {"cost": 1, "points": 1}}
-    valid, msg = validate_speedup_inputs(1, 2, 200, 100, speedup_categories)
-    assert not valid
-    assert "higher" in msg
-
 def test_validate_speedup_inputs_negative_cost():
     speedup_categories = {"1m": {"cost": -1, "points": 1}}
-    valid, msg = validate_speedup_inputs(1, 2, 0, 100, speedup_categories)
+    valid, msg = validate_speedup_inputs(1, 2, 0, speedup_categories)
     assert not valid
     assert "negative" in msg
 
 def test_validate_speedup_inputs_negative_points_in_category():
     speedup_categories = {"1m": {"cost": 1, "points": -1}}
-    valid, msg = validate_speedup_inputs(1, 2, 0, 100, speedup_categories)
+    valid, msg = validate_speedup_inputs(1, 2, 0, speedup_categories)
     assert not valid
     assert "negative" in msg
 
