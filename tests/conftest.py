@@ -53,17 +53,17 @@ def mock_session_state():
             self._state = {}
             self.training_params = {
                 'days': 0,
-                'hours': 4,
-                'minutes': 50,
+                'hours': 0,
+                'minutes': 0,
                 'seconds': 0,
-                'base_training_time': 290.0,
-                'troops_per_batch': 426,
-                'points_per_troop': 830.0
+                'base_training_time': 0.0,
+                'troops_per_batch': 0,
+                'points_per_troop': 0.0
             }
             self.speedup_inventory = {
-                'general': 18000.0,
+                'general': 0.0,
                 'construction': 0.0,
-                'training': 1515.0,
+                'training': 0.0,
                 'research': 0.0
             }
         

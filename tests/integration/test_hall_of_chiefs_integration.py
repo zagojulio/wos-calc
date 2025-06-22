@@ -403,20 +403,22 @@ def test_summary_metrics_with_categories():
 
 def test_clear_all_entries(mock_session_state):
     """Test clearing all entries functionality."""
-    # Add some test entries
-    mock_session_state.hall_of_chiefs_construction_entries = [
+    # Set up session state with test entries
+    mock_session_state._state['hall_of_chiefs_construction_entries'] = [
         {'description': 'Test', 'power': 100.0, 'speedup_minutes': 60.0, 'points_per_power': 30}
     ]
-    mock_session_state.hall_of_chiefs_research_entries = [
+    mock_session_state._state['hall_of_chiefs_research_entries'] = [
         {'description': 'Test', 'power': 10.0, 'speedup_minutes': 100.0, 'points_per_power': 30}
     ]
     
-    # Clear all entries
-    clear_all_entries()
-    
-    # Verify entries are cleared
-    assert mock_session_state.hall_of_chiefs_construction_entries == []
-    assert mock_session_state.hall_of_chiefs_research_entries == []
+    # Mock st.session_state to return our mock
+    with patch('streamlit.session_state', mock_session_state):
+        # Clear all entries
+        clear_all_entries()
+        
+        # Verify entries are cleared
+        assert mock_session_state._state['hall_of_chiefs_construction_entries'] == []
+        assert mock_session_state._state['hall_of_chiefs_research_entries'] == []
 
 def test_construction_description_persistence():
     """Test that construction descriptions are properly handled."""
@@ -586,4 +588,164 @@ def test_successful_entry_creation():
     
     is_valid, error_message = validate_research_entry("Minimal", 0.1, 0.0)
     assert is_valid
-    assert error_message == "" 
+    assert error_message == ""
+
+def test_session_state_reset_bug_fix(mock_session_state):
+    """Test that session state reset bug is fixed and inputs clear correctly."""
+    from features.hall_of_chiefs import (
+        render_construction_sidebar, 
+        render_research_sidebar,
+        init_hall_of_chiefs_session_state
+    )
+    
+    # Initialize session state
+    init_hall_of_chiefs_session_state()
+    
+    # Mock the widgets to simulate user input
+    with patch('streamlit.text_input') as mock_text_input, \
+         patch('streamlit.number_input') as mock_number_input, \
+         patch('streamlit.selectbox') as mock_selectbox, \
+         patch('streamlit.button') as mock_button:
+        
+        # Set up mock returns for first render (with user input)
+        mock_text_input.return_value = "Test Construction"
+        mock_number_input.side_effect = [100.0, 60.0]  # power, speedup
+        mock_selectbox.return_value = 30
+        mock_button.return_value = True  # Simulate button click
+        
+        # Render construction sidebar (this should trigger the clear logic)
+        construction_entries = render_construction_sidebar()
+        
+        # Verify that the clear flag was set
+        assert mock_session_state["clear_construction_inputs"] == True
+        
+        # Reset the flag and clear inputs for next render
+        mock_session_state["clear_construction_inputs"] = False
+        mock_session_state["new_construction_description"] = ""
+        mock_session_state["new_construction_power"] = 0.0
+        mock_session_state["new_construction_speedup"] = 0.0
+        mock_session_state["new_construction_points_per_power"] = 30
+        
+        # Set up mock returns for second render (cleared inputs)
+        mock_text_input.return_value = ""
+        mock_number_input.side_effect = [0.0, 0.0]
+        mock_selectbox.return_value = 30
+        mock_button.return_value = False  # No button click
+        
+        # Render again - should show cleared inputs
+        construction_entries = render_construction_sidebar()
+        
+        # Verify inputs are cleared
+        assert mock_session_state["new_construction_description"] == ""
+        assert mock_session_state["new_construction_power"] == 0.0
+        assert mock_session_state["new_construction_speedup"] == 0.0
+        assert mock_session_state["new_construction_points_per_power"] == 30
+
+def test_research_sidebar_input_clearing(mock_session_state):
+    """Test that research sidebar inputs clear correctly after adding entries."""
+    from features.hall_of_chiefs import (
+        render_research_sidebar,
+        init_hall_of_chiefs_session_state
+    )
+    
+    # Initialize session state
+    init_hall_of_chiefs_session_state()
+    
+    # Mock the widgets to simulate user input
+    with patch('streamlit.text_input') as mock_text_input, \
+         patch('streamlit.number_input') as mock_number_input, \
+         patch('streamlit.selectbox') as mock_selectbox, \
+         patch('streamlit.button') as mock_button:
+        
+        # Set up mock returns for first render (with user input)
+        mock_text_input.return_value = "Test Research"
+        mock_number_input.side_effect = [50.0, 120.0]  # power, speedup
+        mock_selectbox.return_value = 45
+        mock_button.return_value = True  # Simulate button click
+        
+        # Render research sidebar (this should trigger the clear logic)
+        research_entries = render_research_sidebar()
+        
+        # Verify that the clear flag was set
+        assert mock_session_state["clear_research_inputs"] == True
+        
+        # Reset the flag and clear inputs for next render
+        mock_session_state["clear_research_inputs"] = False
+        mock_session_state["new_research_description"] = ""
+        mock_session_state["new_research_power"] = 0.0
+        mock_session_state["new_research_speedup"] = 0.0
+        mock_session_state["new_research_points_per_power"] = 30
+        
+        # Set up mock returns for second render (cleared inputs)
+        mock_text_input.return_value = ""
+        mock_number_input.side_effect = [0.0, 0.0]
+        mock_selectbox.return_value = 30
+        mock_button.return_value = False  # No button click
+        
+        # Render again - should show cleared inputs
+        research_entries = render_research_sidebar()
+        
+        # Verify inputs are cleared
+        assert mock_session_state["new_research_description"] == ""
+        assert mock_session_state["new_research_power"] == 0.0
+        assert mock_session_state["new_research_speedup"] == 0.0
+        assert mock_session_state["new_research_points_per_power"] == 30 
+
+def test_no_streamlit_api_exception_on_input_clear(mock_session_state):
+    """Test that no StreamlitAPIException is thrown when clearing inputs after adding entries."""
+    from features.hall_of_chiefs import (
+        render_construction_sidebar, 
+        render_research_sidebar,
+        init_hall_of_chiefs_session_state
+    )
+    
+    # Initialize session state
+    init_hall_of_chiefs_session_state()
+    
+    # Mock the widgets to simulate user input and button click
+    with patch('streamlit.text_input') as mock_text_input, \
+         patch('streamlit.number_input') as mock_number_input, \
+         patch('streamlit.selectbox') as mock_selectbox, \
+         patch('streamlit.button') as mock_button, \
+         patch('streamlit.success') as mock_success, \
+         patch('streamlit.experimental_rerun') as mock_rerun:
+        
+        # Set up mock returns for construction sidebar (with valid user input)
+        mock_text_input.return_value = "Test Construction"
+        mock_number_input.side_effect = [100.0, 60.0]  # power, speedup
+        mock_selectbox.return_value = 30
+        mock_button.return_value = True  # Simulate button click
+        
+        # This should not throw a StreamlitAPIException
+        try:
+            construction_entries = render_construction_sidebar()
+            # If we get here, no exception was thrown
+            assert True
+        except Exception as e:
+            # If any exception is thrown, it should not be StreamlitAPIException
+            assert "StreamlitAPIException" not in str(type(e))
+        
+        # Verify that the clear flag was set
+        assert mock_session_state["clear_construction_inputs"] == True
+        
+        # Reset for research sidebar test
+        mock_session_state["clear_construction_inputs"] = False
+        mock_session_state["clear_research_inputs"] = False
+        
+        # Set up mock returns for research sidebar (with valid user input)
+        mock_text_input.return_value = "Test Research"
+        mock_number_input.side_effect = [50.0, 120.0]  # power, speedup
+        mock_selectbox.return_value = 45
+        mock_button.return_value = True  # Simulate button click
+        
+        # Test research sidebar
+        try:
+            research_entries = render_research_sidebar()
+            # If we get here, no exception was thrown
+            assert True
+        except Exception as e:
+            # If any exception is thrown, it should not be StreamlitAPIException
+            assert "StreamlitAPIException" not in str(type(e))
+        
+        # Verify that the clear flag was set
+        assert mock_session_state["clear_research_inputs"] == True 

@@ -16,16 +16,16 @@ class MockSessionState:
         super().__setattr__('_data', {
             'training_params': {
                 'days': 0,
-                'hours': 4,
-                'minutes': 50,
+                'hours': 0,
+                'minutes': 0,
                 'seconds': 0,
-                'troops_per_batch': 426,
-                'points_per_troop': 830.0
+                'troops_per_batch': 0,
+                'points_per_troop': 0.0
             },
             'speedup_inventory': {
-                'general': 18000.0,
+                'general': 0.0,
                 'construction': 0.0,
-                'training': 1515.0,
+                'training': 0.0,
                 'research': 0.0
             }
         })
@@ -116,19 +116,19 @@ def test_session_state_initialization_sets_defaults_when_empty(mock_session_stat
     # Initialize session state (empty)
     init_session_state()
     
-    # Verify that defaults were set
+    # Verify that empty defaults were set
     assert 'training_params' in mock_session_state
     assert mock_session_state['training_params']['days'] == 0
-    assert mock_session_state['training_params']['hours'] == 4
-    assert mock_session_state['training_params']['minutes'] == 50
+    assert mock_session_state['training_params']['hours'] == 0
+    assert mock_session_state['training_params']['minutes'] == 0
     assert mock_session_state['training_params']['seconds'] == 0
-    assert mock_session_state['training_params']['troops_per_batch'] == 426
-    assert mock_session_state['training_params']['points_per_troop'] == 830.0
+    assert mock_session_state['training_params']['troops_per_batch'] == 0
+    assert mock_session_state['training_params']['points_per_troop'] == 0.0
     
     assert 'speedup_inventory' in mock_session_state
-    assert mock_session_state['speedup_inventory']['general'] == 18000.0
+    assert mock_session_state['speedup_inventory']['general'] == 0.0
     assert mock_session_state['speedup_inventory']['construction'] == 0.0
-    assert mock_session_state['speedup_inventory']['training'] == 1515.0
+    assert mock_session_state['speedup_inventory']['training'] == 0.0
     assert mock_session_state['speedup_inventory']['research'] == 0.0
 
 def test_training_sidebar_persistence(mock_session_state):

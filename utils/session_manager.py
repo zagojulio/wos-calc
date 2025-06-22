@@ -14,27 +14,27 @@ def init_session_state():
     if 'manual_purchases' not in st.session_state:
         st.session_state.manual_purchases = None
 
-    # Initialize training parameters - only set defaults if not already present
+    # Initialize training parameters - only set if not already present
     if 'training_params' not in st.session_state:
         st.session_state.training_params = {
             'days': 0,
-            'hours': 4,
-            'minutes': 50,
+            'hours': 0,
+            'minutes': 0,
             'seconds': 0,
-            'troops_per_batch': 426,
-            'points_per_troop': 830.0
+            'troops_per_batch': 0,
+            'points_per_troop': 0.0
         }
 
-    # Initialize speed-up inventory - only set defaults if not already present
+    # Initialize speed-up inventory - only set if not already present
     if 'speedup_inventory' not in st.session_state:
         st.session_state.speedup_inventory = {
-            'general': 18000.0,
+            'general': 0.0,
             'construction': 0.0,
-            'training': 1515.0,
+            'training': 0.0,
             'research': 0.0
         }
 
-    # Initialize widget keys for training parameters - only set defaults if not already present
+    # Initialize widget keys for training parameters - only set if not already present
     if 'days' not in st.session_state:
         st.session_state.days = st.session_state.training_params['days']
     if 'hours' not in st.session_state:
@@ -48,7 +48,7 @@ def init_session_state():
     if 'points_per_troop' not in st.session_state:
         st.session_state.points_per_troop = st.session_state.training_params['points_per_troop']
 
-    # Initialize widget keys for speed-up inventory - only set defaults if not already present
+    # Initialize widget keys for speed-up inventory - only set if not already present
     if 'speedup_general' not in st.session_state:
         st.session_state.speedup_general = st.session_state.speedup_inventory['general']
     if 'speedup_construction' not in st.session_state:
@@ -64,6 +64,13 @@ def init_session_state():
     
     if 'hall_of_chiefs_research_entries' not in st.session_state:
         st.session_state.hall_of_chiefs_research_entries = []
+    
+    # Initialize Hall of Chiefs clear input flags
+    if 'clear_construction_inputs' not in st.session_state:
+        st.session_state.clear_construction_inputs = False
+    
+    if 'clear_research_inputs' not in st.session_state:
+        st.session_state.clear_research_inputs = False
 
 def update_training_params(params: Dict[str, Any]):
     """Update training parameters in session state."""

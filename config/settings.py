@@ -2,21 +2,6 @@
 Global settings and configuration for the Whiteout Survival Calculator.
 """
 
-# Default values
-DEFAULT_TRAINING_TIME = {
-    "days": 0,
-    "hours": 4,
-    "minutes": 50,
-    "seconds": 0
-}
-
-DEFAULT_TROOPS_PER_BATCH = 426
-DEFAULT_POINTS_PER_TROOP = 830
-DEFAULT_SPEEDUPS = {
-    "general": 18107.0,
-    "training": 1515.0
-}
-
 # UI Configuration
 PAGE_CONFIG = {
     "page_title": "Whiteout Survival Calculator",

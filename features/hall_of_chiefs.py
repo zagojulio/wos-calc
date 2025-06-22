@@ -18,6 +18,12 @@ def init_hall_of_chiefs_session_state():
         st.session_state[CONSTRUCTION_ENTRIES_KEY] = []
     if RESEARCH_ENTRIES_KEY not in st.session_state:
         st.session_state[RESEARCH_ENTRIES_KEY] = []
+    
+    # Initialize clear input flags
+    if "clear_construction_inputs" not in st.session_state:
+        st.session_state["clear_construction_inputs"] = False
+    if "clear_research_inputs" not in st.session_state:
+        st.session_state["clear_research_inputs"] = False
 
 def calculate_construction_points(power: float, points_per_power: int) -> float:
     """
@@ -131,6 +137,17 @@ def render_construction_sidebar() -> List[Dict[str, Any]]:
         # Get current entries for return value
         entries = st.session_state.get(CONSTRUCTION_ENTRIES_KEY, [])
         
+        # Check if we need to clear inputs (after successful entry addition)
+        clear_inputs = st.session_state.get("clear_construction_inputs", False)
+        if clear_inputs:
+            # Reset the flag
+            st.session_state["clear_construction_inputs"] = False
+            # Clear input values before creating widgets
+            st.session_state["new_construction_description"] = ""
+            st.session_state["new_construction_power"] = 0.0
+            st.session_state["new_construction_speedup"] = 0.0
+            st.session_state["new_construction_points_per_power"] = 30
+        
         # Input fields for new entry
         description = st.text_input(
             "Description",
@@ -183,11 +200,8 @@ def render_construction_sidebar() -> List[Dict[str, Any]]:
                 entries.append(new_entry)
                 st.session_state[CONSTRUCTION_ENTRIES_KEY] = entries
                 
-                # Clear input fields by updating session state keys
-                st.session_state["new_construction_description"] = ""
-                st.session_state["new_construction_power"] = 0.0
-                st.session_state["new_construction_speedup"] = 0.0
-                st.session_state["new_construction_points_per_power"] = 30
+                # Set flag to clear inputs on next render
+                st.session_state["clear_construction_inputs"] = True
                 
                 st.success(f"Construction entry '{description.strip()}' added successfully!")
                 st.experimental_rerun()
@@ -207,6 +221,17 @@ def render_research_sidebar() -> List[Dict[str, Any]]:
         
         # Get current entries for return value
         entries = st.session_state.get(RESEARCH_ENTRIES_KEY, [])
+        
+        # Check if we need to clear inputs (after successful entry addition)
+        clear_inputs = st.session_state.get("clear_research_inputs", False)
+        if clear_inputs:
+            # Reset the flag
+            st.session_state["clear_research_inputs"] = False
+            # Clear input values before creating widgets
+            st.session_state["new_research_description"] = ""
+            st.session_state["new_research_power"] = 0.0
+            st.session_state["new_research_speedup"] = 0.0
+            st.session_state["new_research_points_per_power"] = 30
         
         # Input fields for new entry
         description = st.text_input(
@@ -260,11 +285,8 @@ def render_research_sidebar() -> List[Dict[str, Any]]:
                 entries.append(new_entry)
                 st.session_state[RESEARCH_ENTRIES_KEY] = entries
                 
-                # Clear input fields by updating session state keys
-                st.session_state["new_research_description"] = ""
-                st.session_state["new_research_power"] = 0.0
-                st.session_state["new_research_speedup"] = 0.0
-                st.session_state["new_research_points_per_power"] = 30
+                # Set flag to clear inputs on next render
+                st.session_state["clear_research_inputs"] = True
                 
                 st.success(f"Research entry '{description.strip()}' added successfully!")
                 st.experimental_rerun()
@@ -453,27 +475,38 @@ def render_hall_of_chiefs_tab():
     # Calculate summary metrics
     summary = calculate_summary_metrics(df)
     
-    # Remove All Entries button
+    # Remove All Entries button with proper confirmation dialog
     if not df.empty:
         st.subheader("Manage Entries")
         col1, col2 = st.columns([1, 3])
         with col1:
-            if st.button(
-                "🗑️ Remove All Entries",
-                type="primary",
-                help="Clear all entries from all categories"
-            ):
+            # Initialize confirmation state
+            if 'remove_all_confirm' not in st.session_state:
+                st.session_state.remove_all_confirm = False
+            
+            if not st.session_state.remove_all_confirm:
+                if st.button(
+                    "🗑️ Remove All Entries",
+                    type="primary",
+                    help="Clear all entries from all categories"
+                ):
+                    st.session_state.remove_all_confirm = True
+                    st.experimental_rerun()
+            else:
                 # Show confirmation dialog
                 st.warning("Are you sure you want to remove all entries?")
                 col_confirm1, col_confirm2 = st.columns(2)
                 with col_confirm1:
-                    if st.button("Yes, Remove All"):
+                    if st.button("Yes, Remove All", type="primary"):
                         clear_all_entries()
+                        st.session_state.remove_all_confirm = False
                         st.success("All entries have been removed.")
                         st.experimental_rerun()
                 with col_confirm2:
                     if st.button("Cancel"):
+                        st.session_state.remove_all_confirm = False
                         st.info("Operation cancelled.")
+                        st.experimental_rerun()
         with col2:
             st.write("⚠️ This action cannot be undone.")
     
