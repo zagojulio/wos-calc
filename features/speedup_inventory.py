@@ -4,7 +4,7 @@ Handles speed-up inventory sidebar functionality and calculations.
 """
 
 import streamlit as st
-from utils.session_manager import get_speedup_inventory, update_speedup_inventory
+from utils.session_manager import get_speedup_inventory, update_speedup_inventory, persist_speedup_inventory
 from typing import Dict, Any
 
 def render_speedup_inventory_sidebar() -> Dict[str, float]:
@@ -75,10 +75,11 @@ def render_speedup_inventory_sidebar() -> Dict[str, float]:
         # Add Update Speedup Inventory button
         if st.button("Update Speedup Inventory", key="update_speedup_inventory_btn"):
             # Persist the current speedup inventory to JSON
-            from features.hall_of_chiefs_session import get_session_manager
-            session_manager = get_session_manager()
-            session_manager.persist_speedup_inventory(new_inventory)
-            st.success("Speedup inventory updated and saved!")
+            success = persist_speedup_inventory(new_inventory)
+            if success:
+                st.success("Speedup inventory updated and saved!")
+            else:
+                st.error("Failed to save speedup inventory. Please try again.")
         
         return new_inventory
 

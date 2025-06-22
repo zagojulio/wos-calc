@@ -11,6 +11,12 @@ from features.speedup_inventory import (
 
 def test_render_speedup_inventory_sidebar(mock_session_state):
     """Test rendering speed-up inventory sidebar."""
+    # Initialize the mock session state with the expected widget values
+    mock_session_state['speedup_general'] = 18000.0
+    mock_session_state['speedup_construction'] = 0.0
+    mock_session_state['speedup_training'] = 1515.0
+    mock_session_state['speedup_research'] = 0.0
+    
     inventory = render_speedup_inventory_sidebar()
     
     # Verify returned inventory structure

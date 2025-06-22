@@ -92,7 +92,10 @@ def mock_streamlit(monkeypatch, mock_session_state):
     monkeypatch.setattr("streamlit.markdown", lambda text, **kwargs: None)
     monkeypatch.setattr("streamlit.sidebar", type("Sidebar", (), {"expander": lambda *args, **kwargs: type("Expander", (), {"__enter__": lambda self: self, "__exit__": lambda self, *args: None})()}))
     monkeypatch.setattr("streamlit.columns", lambda n: [type("Column", (), {"__enter__": lambda self: self, "__exit__": lambda self, *args: None})() for _ in range(n)])
-    monkeypatch.setattr("streamlit.number_input", lambda *args, **kwargs: kwargs.get("value", 0))
+    monkeypatch.setattr(
+        "streamlit.number_input",
+        lambda *args, **kwargs: mock_session_state.get(kwargs.get("key"), kwargs.get("value", 0))
+    )
     monkeypatch.setattr("streamlit.text_input", lambda *args, **kwargs: kwargs.get("value", ""))
     monkeypatch.setattr("streamlit.date_input", lambda *args, **kwargs: kwargs.get("value", datetime.now()))
     monkeypatch.setattr("streamlit.button", lambda *args, **kwargs: False)
